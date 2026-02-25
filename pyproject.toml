@@ -22,7 +22,3 @@ warn_unused_ignores = true
 ignore_missing_imports = true
 disallow_untyped_defs = true
 check_untyped_defs = true
-
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
