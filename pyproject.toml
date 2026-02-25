@@ -9,11 +9,13 @@ authors = [
     {name = "advacher", email ="advacher@student.42lyon.fr"}
 ]
 dependencies = []
+
+[project.optional-dependencies]
 dev = [
-    "flake8>=7.3.0",
-    "mypy>=1.19.1",
-    "pytest>=9.0.2"
+    "mypy==1.19.1",
+    "flake8"
 ]
+
 
 [tool.mypy]
 python_version = "3.10"
