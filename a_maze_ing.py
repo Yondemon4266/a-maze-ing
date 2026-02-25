@@ -11,7 +11,7 @@ def main() -> None:
     try:
         print(f"Attempting to load configuration from: {config_file}")
     # config_data = parse_config(config_file)
-    # maze_grid = generate_maze(config_data)
+    # maze_grid = initialize_maze(config_data)
     # solution_path = solve_maze(maze_grid)
     # render_maze(maze_grid, solution_path)
 
