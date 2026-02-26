@@ -113,13 +113,10 @@ wheels = [
 [[package]]
 name = "mazegen"
 version = "1.0.0"
-source = { virtual = "." }
+source = { editable = "." }
 dependencies = [
     { name = "pydantic" },
 ]
-
-[package.optional-dependencies]
-source = { editable = "." }
 
 [package.dev-dependencies]
 dev = [
@@ -128,12 +125,7 @@ dev = [
 ]
 
 [package.metadata]
-requires-dist = [
-    { name = "flake8", marker = "extra == 'dev'" },
-    { name = "mypy", marker = "extra == 'dev'", specifier = "==1.19.1" },
-    { name = "pydantic", specifier = ">=2.12.5" },
-]
-provides-extras = ["dev"]
+requires-dist = [{ name = "pydantic", specifier = ">=2.12.5" }]
 
 [package.metadata.requires-dev]
 dev = [

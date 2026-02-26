@@ -1,17 +1,8 @@
-from maze_config import MazeConfig
+from src.parser.maze_config import MazeConfig
 from pydantic import ValidationError
-
-
-class MazeConfigParserError(Exception):
-    pass
-
-
-class MazeConfigParserValueError(ValueError):
-    pass
-
-
-class MazeConfigParserFileError(MazeConfigParserError, OSError):
-    pass
+from src.parser.maze_parser_config_error import MazeConfigParserError
+from src.parser.maze_parser_config_error import MazeConfigParserFileError
+from src.parser.maze_parser_config_error import MazeConfigParserValueError
 
 
 class MazeConfigParser:

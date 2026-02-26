@@ -18,7 +18,9 @@ class MazeConfig(BaseModel):
 
     pattern_width: int = Field(default=0)
     pattern_height: int = Field(default=0)
-    pattern_abs_coords: list[tuple[int, int]] = Field(default_factory=list)
+    pattern_centered_coords: list[tuple[int, int]] = Field(
+        default_factory=list
+    )
 
     # parse coords of entry and exit keys before
     @field_validator("entry", "exit", mode="before")
@@ -31,7 +33,7 @@ class MazeConfig(BaseModel):
                 f" 'ENTRY=1,2'. received: {coords}"
             )
         x, y = map(int, coords_splitted)
-        return (x, y)
+        return (y, x)
 
     # setup pattern dimensions
     @model_validator(mode="after")
@@ -48,7 +50,7 @@ class MazeConfig(BaseModel):
         self.pattern_height = len(pattern_design)
 
         pattern_coords: list[tuple[int, int]] = []
-        self.pattern_abs_coords: list[tuple[int, int]] = []
+        self.pattern_centered_coords: list[tuple[int, int]] = []
 
         # if pattern doesnt fit, we dont fill pattern_coords and return
         if not self.can_fit_42():
@@ -70,7 +72,7 @@ class MazeConfig(BaseModel):
         for row, col in pattern_coords:
             absolute_row: int = start_pattern_row + row
             absolute_col: int = start_pattern_col + col
-            self.pattern_abs_coords.append(
+            self.pattern_centered_coords.append(
                 (absolute_row, absolute_col),
             )
         return self
@@ -94,11 +96,11 @@ class MazeConfig(BaseModel):
         # verify that the pattern can fit in the maze and
         # if entry and exit are out of pattern
         if self.can_fit_42():
-            if self.entry in self.pattern_abs_coords:
+            if self.entry in self.pattern_centered_coords:
                 raise ValueError(
                     f"ENTRY {self.entry} is inside the '42' pattern area."
                 )
-            if self.exit in self.pattern_abs_coords:
+            if self.exit in self.pattern_centered_coords:
                 raise ValueError(
                     f"EXIT {self.exit} is inside the '42' pattern area."
                 )
@@ -106,7 +108,7 @@ class MazeConfig(BaseModel):
         return self
 
     def _is_coords_in_limits(self, coord: tuple[int, int]) -> bool:
-        x, y = coord
+        y, x = coord
         if not (0 <= x < self.width) or not (0 <= y < self.height):
             return False
         return True
