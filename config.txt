@@ -6,7 +6,7 @@ WIDTH=30
 HEIGHT=50
 
 # Entry coordinates (x,y)
-ENTRY=0,3
+ENTRY=0,4
 
 # Exit coordinates (x,y) 
 EXIT=0,2
