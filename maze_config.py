@@ -44,8 +44,8 @@ class MazeConfig(BaseModel):
             "..#.###",
         ]
         # setup width and height of pattern
-        self.pattern_width = max(len(row) for row in pattern_design) + 2
-        self.pattern_height = len(pattern_design) + 2
+        self.pattern_width = max(len(row) for row in pattern_design)
+        self.pattern_height = len(pattern_design)
 
         pattern_coords: list[tuple[int, int]] = []
         self.pattern_abs_coords: list[tuple[int, int]] = []
@@ -53,8 +53,9 @@ class MazeConfig(BaseModel):
         # if pattern doesnt fit, we dont fill pattern_coords and return
         if not self.can_fit_42():
             print(
-                f"Maze {self.width}x{self.height} is too small for pattern "
-                f"({self.pattern_width}x{self.pattern_height})"
+                f"Error: Maze {self.width}x{self.height} is too small "
+                f"for pattern ({self.pattern_width + 2}x"
+                f"{self.pattern_height + 2})"
             )
             return self
 
@@ -86,7 +87,7 @@ class MazeConfig(BaseModel):
                     f" (0-{self.width - 1}, 0-{self.height - 1})"
                 )
 
-        # verifier que entry et exit sont pas les memes points
+        # verify that entry et exit are different points
         if self.entry == self.exit:
             raise ValueError("ENTRY and EXIT positions must be different.")
 
@@ -101,11 +102,6 @@ class MazeConfig(BaseModel):
                 raise ValueError(
                     f"EXIT {self.exit} is inside the '42' pattern area."
                 )
-        else:
-            print(
-                f"Error: Maze size {self.width}x{self.height} is too "
-                "small for '42' pattern."
-            )
 
         return self
 
@@ -117,8 +113,8 @@ class MazeConfig(BaseModel):
 
     def can_fit_42(self) -> bool:
         if (
-            self.width >= self.pattern_width
-            and self.height >= self.pattern_height
+            self.width >= self.pattern_width + 2
+            and self.height >= self.pattern_height + 2
         ):
             return True
         return False

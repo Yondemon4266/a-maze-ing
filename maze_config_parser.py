@@ -10,7 +10,7 @@ class MazeConfigParserValueError(ValueError):
     pass
 
 
-class MazeConfigParserFileError(OSError):
+class MazeConfigParserFileError(MazeConfigParserError, OSError):
     pass
 
 
@@ -49,6 +49,12 @@ if __name__ == "__main__":
     try:
         maze_config: MazeConfig = MazeConfigParser.load_config("config.txt")
         print(maze_config)
-        print(maze_config.__dict__)
+    except MazeConfigParserError as err:
+        print(err.__class__.__name__, err)
     except ValidationError as err:
-        print(err)
+        for error in err.errors():
+            field_path = " -> ".join(map(str, error["loc"])).upper()
+            field = field_path if field_path else "validate_config"
+
+            msg: str = error.get("msg", "empty")
+            print(f"MazeConfig error, Field {field} : {msg}")
