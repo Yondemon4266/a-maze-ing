@@ -1,8 +1,8 @@
 import sys
-from src.parser.maze_config_parser import MazeConfigParser
-from src.parser.maze_config import MazeConfig
-from src.src_maze.maze_generate import MazeGenerator
-from src.parser.maze_parser_config_error import MazeConfigParserError
+from maze_config_parser import MazeConfigParser
+from maze_config import MazeConfig
+from mazegen.maze_generate import MazeGenerator
+from maze_parser_config_error import MazeConfigParserError
 from pydantic import ValidationError
 
 
@@ -23,9 +23,17 @@ def main() -> None:
     config_file: str = sys.argv[1]
     try:
         print(f"Attempting to load configuration from: {config_file}")
-        config_data: MazeConfig = MazeConfigParser.load_config(config_file)
-        maze: MazeGenerator = MazeGenerator(config_data)
-        maze.generate_maze()
+        config: MazeConfig = MazeConfigParser.load_config(config_file)
+        maze: MazeGenerator = MazeGenerator(
+            config.width,
+            config.height,
+            config.entry,
+            config.exit,
+            config.output_file,
+            config.perfect,
+            config.seed,
+            config.algorithm,
+        )
         display_hexa(maze)
     # maze_grid = initialize_maze(config_data)
     # solution_path = solve_maze(maze_grid)
