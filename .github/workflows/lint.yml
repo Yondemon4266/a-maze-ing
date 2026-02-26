@@ -14,30 +14,22 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.10"
-          cache: 'pip' 
 
       - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          # Installation de MyPy et Flake8
-          pip install mypy==1.19.1 flake8
-          
-          # Installation du projet et de ses dépendances via pyproject.toml
-          # Le "." installe le package courant en mode éditable
-          if [ -f pyproject.toml ]; then pip install .; fi
+        run: uv sync
 
       - name: Run MyPy
-        run: |
-          mypy . --warn-return-any \
-                 --warn-unused-ignores \
-                 --ignore-missing-imports \
-                 --disallow-untyped-defs \
-                 --check-untyped-defs
+        run: uv run mypy a_maze_ing.py src/
 
       - name: Run Flake8
-        run: |
-          flake8 .
+        run: uv run flake8 a_maze_ing.py src/

@@ -1,7 +1,7 @@
 PYTHON = uv run python3 
 MAIN = a_maze_ing.py
 CONFIG = config.txt
-SRC = $(MAIN) mazegen/
+SRC = $(MAIN) src/
 
 all: install
 
