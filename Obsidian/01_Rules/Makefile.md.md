@@ -1,7 +1,6 @@
 # 🛠️ Makefile Specifications
 
 We must include a `Makefile` in our project to automate common tasks. 
-
 ## Mandatory Rules to Implement
 - [x] `install`: Install project dependencies. We will use `uv` as package manager because it become the industry standard for Python development.
 - [x] `run`: Execute the main script of the project (e.g., via Python interpreter).
