@@ -1,7 +1,7 @@
 PYTHON = uv run python3 
 MAIN = a_maze_ing.py
 CONFIG = config.txt
-SRC = $(MAIN) src/
+SRC = $(MAIN) mazegen/
 
 all: install
 
@@ -13,7 +13,7 @@ install: .venv/uv.lock
 
 run: install
 	@echo "Running the maze generator..."
-	$(PYTHON) $(MAIN) $(CONFIG)
+	$(PYTHON) $(MAIN) $(CONFIG) 
 
 debug: install
 	@echo "Starting debug mode..."
@@ -39,10 +39,12 @@ build: install
 clean:
 	@echo "Cleaning up..."
 	rm -rf __pycache__ \
+	rm -rf mazegen/__pycache__ \
 	.mypy_cache \
 	.venv dist/ \
 	mazegen-*.whl \
 	mazegen-*.tar.gz \
+	mazegen.egg-info* \
 	uv.lock
 
 .PHONY: install run debug lint lint-strict build clean

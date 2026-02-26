@@ -1,4 +1,17 @@
 import sys
+from maze_config_parser import MazeConfigParser
+from maze_config import MazeConfig
+from mazegen.maze_generate import MazeGenerator
+from maze_parser_config_error import MazeConfigParserError
+from pydantic import ValidationError
+
+
+def display_hexa(maze: MazeGenerator) -> None:
+    for y in range(maze.height):
+        line: str = ""
+        for x in range(maze.width):
+            line += f"{maze.maze_grid[y][x]:X}"
+        print(line)
 
 
 def main() -> None:
@@ -10,18 +23,30 @@ def main() -> None:
     config_file: str = sys.argv[1]
     try:
         print(f"Attempting to load configuration from: {config_file}")
-    # config_data = parse_config(config_file)
+        config: MazeConfig = MazeConfigParser.load_config(config_file)
+        maze: MazeGenerator = MazeGenerator(
+            config.width,
+            config.height,
+            config.entry,
+            config.exit,
+            config.output_file,
+            config.perfect,
+            config.seed,
+            config.algorithm,
+        )
+        display_hexa(maze)
     # maze_grid = initialize_maze(config_data)
     # solution_path = solve_maze(maze_grid)
     # render_maze(maze_grid, solution_path)
 
-    except FileNotFoundError:
-        sys.stderr.write("Error: The configuration file"
-                         f"'{config_file}' was not found.\n")
-        sys.exit(1)
-    except PermissionError:
-        sys.stderr.write("Error: Permission denied to read"
-                         f"'{config_file}'.\n")
+    except MazeConfigParserError as err:
+        sys.stderr.write(f"{err.__class__.__name__, err}")
+    except ValidationError as err:
+        for error in err.errors():
+            field_path = " -> ".join(map(str, error["loc"])).upper()
+            field = field_path if field_path else "validate_config"
+            msg: str = error.get("msg", "empty")
+            sys.stderr.write(f"MazeConfig error, Field {field} : {msg}")
         sys.exit(1)
     except Exception as e:
         sys.stderr.write(f"Error: -> {e}\n")

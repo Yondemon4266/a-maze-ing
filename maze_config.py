@@ -16,10 +16,6 @@ class MazeConfig(BaseModel):
     seed: Optional[str] = Field(default=None)
     algorithm: str = "PRIM"
 
-    pattern_width: int = Field(default=0)
-    pattern_height: int = Field(default=0)
-    pattern_abs_coords: list[tuple[int, int]] = Field(default_factory=list)
-
     # parse coords of entry and exit keys before
     @field_validator("entry", "exit", mode="before")
     @classmethod
@@ -31,49 +27,7 @@ class MazeConfig(BaseModel):
                 f" 'ENTRY=1,2'. received: {coords}"
             )
         x, y = map(int, coords_splitted)
-        return (x, y)
-
-    # setup pattern dimensions
-    @model_validator(mode="after")
-    def create_pattern(self) -> "MazeConfig":
-        pattern_design: list[str] = [
-            "#...###",
-            "#.....#",
-            "###.###",
-            "..#.#..",
-            "..#.###",
-        ]
-        # setup width and height of pattern
-        self.pattern_width = max(len(row) for row in pattern_design)
-        self.pattern_height = len(pattern_design)
-
-        pattern_coords: list[tuple[int, int]] = []
-        self.pattern_abs_coords: list[tuple[int, int]] = []
-
-        # if pattern doesnt fit, we dont fill pattern_coords and return
-        if not self.can_fit_42():
-            print(
-                f"Error: Maze {self.width}x{self.height} is too small "
-                f"for pattern ({self.pattern_width + 2}x"
-                f"{self.pattern_height + 2})"
-            )
-            return self
-
-        # we fill pattern_coords with the pattern design
-        # and fill the abs pattern coords
-        for row_idx, row_string in enumerate(pattern_design):
-            for col_idx, char in enumerate(row_string):
-                if char == "#":
-                    pattern_coords.append((row_idx, col_idx))
-        start_pattern_col: int = (self.width - self.pattern_width) // 2
-        start_pattern_row: int = (self.height - self.pattern_height) // 2
-        for row, col in pattern_coords:
-            absolute_row: int = start_pattern_row + row
-            absolute_col: int = start_pattern_col + col
-            self.pattern_abs_coords.append(
-                (absolute_row, absolute_col),
-            )
-        return self
+        return (y, x)
 
     # validate the config
     @model_validator(mode="after")
@@ -93,28 +47,11 @@ class MazeConfig(BaseModel):
 
         # verify that the pattern can fit in the maze and
         # if entry and exit are out of pattern
-        if self.can_fit_42():
-            if self.entry in self.pattern_abs_coords:
-                raise ValueError(
-                    f"ENTRY {self.entry} is inside the '42' pattern area."
-                )
-            if self.exit in self.pattern_abs_coords:
-                raise ValueError(
-                    f"EXIT {self.exit} is inside the '42' pattern area."
-                )
 
         return self
 
     def _is_coords_in_limits(self, coord: tuple[int, int]) -> bool:
-        x, y = coord
+        y, x = coord
         if not (0 <= x < self.width) or not (0 <= y < self.height):
             return False
         return True
-
-    def can_fit_42(self) -> bool:
-        if (
-            self.width >= self.pattern_width + 2
-            and self.height >= self.pattern_height + 2
-        ):
-            return True
-        return False
