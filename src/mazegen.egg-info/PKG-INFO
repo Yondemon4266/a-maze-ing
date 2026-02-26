@@ -5,8 +5,5 @@ Summary: Maze generator module
 Author-email: aluslu <aluslu@student.42lyon.fr>, advacher <advacher@student.42lyon.fr>
 Requires-Python: >=3.10
 Description-Content-Type: text/markdown
-Provides-Extra: dev
-Requires-Dist: mypy==1.19.1; extra == "dev"
-Requires-Dist: flake8; extra == "dev"
 
 # a-maze-ing
