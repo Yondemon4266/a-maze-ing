@@ -106,18 +106,19 @@ name = "mazegen"
 version = "1.0.0"
 source = { editable = "." }
 
-[package.optional-dependencies]
+[package.dev-dependencies]
 dev = [
     { name = "flake8" },
     { name = "mypy" },
 ]
 
 [package.metadata]
-requires-dist = [
-    { name = "flake8", marker = "extra == 'dev'" },
-    { name = "mypy", marker = "extra == 'dev'", specifier = "==1.19.1" },
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "flake8" },
+    { name = "mypy", specifier = "==1.19.1" },
 ]
-provides-extras = ["dev"]
 
 [[package]]
 name = "mccabe"

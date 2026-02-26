@@ -26,7 +26,7 @@ jobs:
           python-version: "3.10"
 
       - name: Install dependencies
-        run: uv sync --dev
+        run: uv sync 
 
       - name: Run MyPy
         run: uv run mypy a_maze_ing.py src/
