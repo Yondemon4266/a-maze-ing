@@ -1,112 +1,64 @@
-import sys
 import random
 
 
-def generate_maze(config_data: dict,
-                  maze_grid: list[list[int]],
-                  visited_grid: list[list[bool]]
-                  ) -> None:
+class MazeGenerator:
+    def __init__(self, config_data: dict):
+        self.config_data = config_data
+        self.width = config_data["WIDTH"]
+        self.height = config_data["HEIGHT"]
+        self.entry = config_data["ENTRY"]
+        self.exit = config_data["EXIT"]
 
-    stack: list[tuple] = []
-    parse_height: int = config_data["HEIGHT"]
-    parse_width: int = config_data["WIDTH"]
+        self.maze_grid = self.initialize_maze()
+        self.visited_grid = self.generate_visited_grid()
 
-    X, Y = config_data["ENTRY"]
-    visited_grid[X][Y] = True
-    stack.append((X, Y))
+    def generate_visited_grid(self) -> list[list[bool]]:
+        return [[False] * self.width for _ in range(self.height)]
 
-    while stack:
-        current_x, current_y = stack[-1]
-        valid_neighbors: list = []
-        if (current_x - 1 >= 0 and
-                visited_grid[current_x - 1][current_y] is False):
-            valid_neighbors.append(("North", current_x - 1, current_y))
-        if (current_x + 1 < parse_height and
-                visited_grid[current_x + 1][current_y] is False):
-            valid_neighbors.append(("South", current_x + 1, current_y))
-        if (current_y + 1 < parse_width and
-                visited_grid[current_x][current_y + 1] is False):
-            valid_neighbors.append(("East", current_x, current_y + 1))
-        if (current_y - 1 >= 0 and
-                visited_grid[current_x][current_y - 1] is False):
-            valid_neighbors.append(("West", current_x, current_y - 1))
+    def initialize_maze(self) -> list[list[int]]:
+        return [[15] * self.width for _ in range(self.height)]
 
-        if valid_neighbors:
-            chosen_direction, next_x, next_y = random.choice(valid_neighbors)
-            visited_grid[next_x][next_y] = True
-            stack.append((next_x, next_y))
-            if chosen_direction == "North":
-                maze_grid[current_x][current_y] -= 1
-                maze_grid[next_x][next_y] -= 4
-            elif chosen_direction == "South":
-                maze_grid[current_x][current_y] -= 4
-                maze_grid[next_x][next_y] -= 1
-            elif chosen_direction == "East":
-                maze_grid[current_x][current_y] -= 2
-                maze_grid[next_x][next_y] -= 8
+    def generate_maze(self) -> None:
+        stack: list[tuple] = []
+
+        entry_x, entry_y = self.config_data["ENTRY"]
+        self.visited_grid[entry_x][entry_y] = True
+        stack.append((entry_x, entry_y))
+
+        while stack:
+            current_x, current_y = stack[-1]
+            valid_neighbors: list = []
+
+            if (current_x - 1 >= 0 and
+                    self.visited_grid[current_x - 1][current_y] is False):
+                valid_neighbors.append(("North", current_x - 1, current_y))
+            if (current_x + 1 < self.height and
+                    self.visited_grid[current_x + 1][current_y] is False):
+                valid_neighbors.append(("South", current_x + 1, current_y))
+            if (current_y + 1 < self.width and
+                    self.visited_grid[current_x][current_y + 1] is False):
+                valid_neighbors.append(("East", current_x, current_y + 1))
+            if (current_y - 1 >= 0 and
+                    self.visited_grid[current_x][current_y - 1] is False):
+                valid_neighbors.append(("West", current_x, current_y - 1))
+
+            if valid_neighbors:
+                chosen_direction, next_x, next_y = (
+                    random.choice(valid_neighbors))
+
+                self.visited_grid[next_x][next_y] = True
+                stack.append((next_x, next_y))
+                if chosen_direction == "North":
+                    self.maze_grid[current_x][current_y] -= 1
+                    self.maze_grid[next_x][next_y] -= 4
+                elif chosen_direction == "South":
+                    self.maze_grid[current_x][current_y] -= 4
+                    self.maze_grid[next_x][next_y] -= 1
+                elif chosen_direction == "East":
+                    self.maze_grid[current_x][current_y] -= 2
+                    self.maze_grid[next_x][next_y] -= 8
+                else:
+                    self.maze_grid[current_x][current_y] -= 8
+                    self.maze_grid[next_x][next_y] -= 2
             else:
-                maze_grid[current_x][current_y] -= 8
-                maze_grid[next_x][next_y] -= 2
-        else:
-            stack.pop()
-
-
-def create_pattern(config_data: dict, visited_grid: list[list[bool]]) -> None:
-
-    parse_height: int = config_data["HEIGHT"]
-    parse_width: int = config_data["WIDTH"]
-    pattern_tuples: list[tuple[int, int]] = []
-
-    pattern_design: list[str] = [
-        "#...###",
-        "#.....#",
-        "###.###",
-        "..#.#..",
-        "..#.###"
-    ]
-
-    for row_idx, row_string in enumerate(pattern_design):
-        for col_idx, char in enumerate(row_string):
-            if char == "#":
-                pattern_tuples.append((row_idx, col_idx))
-
-    pattern_width: int = max(len(row) for row in pattern_design)
-    pattern_height: int = len(pattern_design)
-
-    if parse_width < pattern_width or parse_height < pattern_height:
-        sys.stderr.write("Maze is to small to display pattern\n")
-    else:
-        start_pattern_col = (parse_width - pattern_width) // 2
-        start_pattern_row = (parse_height - pattern_height) // 2
-        for row, col in pattern_tuples:
-            real_row_pattern = start_pattern_row + row
-            real_col_pattern = start_pattern_col + col
-            visited_grid[real_row_pattern][real_col_pattern] = True
-
-
-def generate_visited_grid(config_data: dict) -> list[list[bool]]:
-
-    parse_width: int = config_data["WIDTH"]
-    parse_height: int = config_data["HEIGHT"]
-
-    return [[False] * parse_width for _ in range(parse_height)]
-
-
-def initialize_maze(config_data: dict) -> list[list[int]]:
-    parse_width: int = config_data["WIDTH"]
-    parse_height: int = config_data["HEIGHT"]
-
-    return [[15] * parse_width for _ in range(parse_height)]
-
-
-if __name__ == "__main__":
-    config_data = {
-        "WIDTH": 10,
-        "HEIGHT": 10,
-        "ENTRY": (1, 1)
-    }
-    maze_grid: list[list[int]] = initialize_maze(config_data)
-    visited_grid: list[list[bool]] = generate_visited_grid(config_data)
-    create_pattern(config_data, visited_grid)
-    generate_maze(config_data, maze_grid, visited_grid)
-    print(f"{maze_grid}")
+                stack.pop()
