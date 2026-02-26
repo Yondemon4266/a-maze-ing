@@ -3,15 +3,15 @@ import random
 
 
 def generate_maze(config_data: dict,
-                  maze_grid: list[int],
-                  visited_grid: list[bool]
+                  maze_grid: list[list[int]],
+                  visited_grid: list[list[bool]]
                   ) -> None:
 
     stack: list[tuple] = []
-    parse_height: int = config_data.get("HEIGHT")
-    parse_width: int = config_data.get("WIDTH")
+    parse_height: int = config_data["HEIGHT"]
+    parse_width: int = config_data["WIDTH"]
 
-    X, Y = config_data.get("ENTRY")
+    X, Y = config_data["ENTRY"]
     visited_grid[X][Y] = True
     stack.append((X, Y))
 
@@ -51,11 +51,11 @@ def generate_maze(config_data: dict,
             stack.pop()
 
 
-def create_pattern(config_data: dict, visited_grid: list[bool]) -> None:
+def create_pattern(config_data: dict, visited_grid: list[list[bool]]) -> None:
 
-    parse_height: int = config_data.get("HEIGHT")
-    parse_width: int = config_data.get("WIDTH")
-    pattern_tuples: list[tuple] = []
+    parse_height: int = config_data["HEIGHT"]
+    parse_width: int = config_data["WIDTH"]
+    pattern_tuples: list[tuple[int, int]] = []
 
     pattern_design: list[str] = [
         "#...###",
@@ -68,7 +68,7 @@ def create_pattern(config_data: dict, visited_grid: list[bool]) -> None:
     for row_idx, row_string in enumerate(pattern_design):
         for col_idx, char in enumerate(row_string):
             if char == "#":
-                pattern_tuples.append([row_idx, col_idx])
+                pattern_tuples.append((row_idx, col_idx))
 
     pattern_width: int = max(len(row) for row in pattern_design)
     pattern_height: int = len(pattern_design)
@@ -84,32 +84,19 @@ def create_pattern(config_data: dict, visited_grid: list[bool]) -> None:
             visited_grid[real_row_pattern][real_col_pattern] = True
 
 
-def generate_visited_grid(config_data: dict) -> list[bool]:
+def generate_visited_grid(config_data: dict) -> list[list[bool]]:
 
-    parse_width: int = config_data.get("WIDTH")
-    parse_height: int = config_data.get("HEIGHT")
-    visited_grid: list[bool] = []
-    for _ in range(0, parse_height):
-        current_row = []
-        for _ in range(0, parse_width):
-            current_row.append(False)
-        visited_grid.append(current_row)
+    parse_width: int = config_data["WIDTH"]
+    parse_height: int = config_data["HEIGHT"]
 
-    return visited_grid
+    return [[False] * parse_width for _ in range(parse_height)]
 
 
-def initialize_maze(config_data: dict) -> list[int]:
-    parse_width: int = config_data.get("WIDTH")
-    parse_height: int = config_data.get("HEIGHT")
-    init_grid: list[int] = []
+def initialize_maze(config_data: dict) -> list[list[int]]:
+    parse_width: int = config_data["WIDTH"]
+    parse_height: int = config_data["HEIGHT"]
 
-    for _ in range(0, parse_height):
-        current_row = []
-        for _ in range(0, parse_width):
-            current_row.append(15)
-        init_grid.append(current_row)
-
-    return init_grid
+    return [[15] * parse_width for _ in range(parse_height)]
 
 
 if __name__ == "__main__":
@@ -118,8 +105,8 @@ if __name__ == "__main__":
         "HEIGHT": 10,
         "ENTRY": (1, 1)
     }
-    maze_grid: list[int] = initialize_maze(config_data)
-    visited_grid: list[bool] = generate_visited_grid(config_data)
-    pattern: dict[str, int] = create_pattern(config_data, visited_grid)
+    maze_grid: list[list[int]] = initialize_maze(config_data)
+    visited_grid: list[list[bool]] = generate_visited_grid(config_data)
+    create_pattern(config_data, visited_grid)
     generate_maze(config_data, maze_grid, visited_grid)
     print(f"{maze_grid}")
