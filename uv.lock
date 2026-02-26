@@ -119,6 +119,9 @@ dependencies = [
 ]
 
 [package.optional-dependencies]
+source = { editable = "." }
+
+[package.dev-dependencies]
 dev = [
     { name = "flake8" },
     { name = "mypy" },
@@ -131,6 +134,12 @@ requires-dist = [
     { name = "pydantic", specifier = ">=2.12.5" },
 ]
 provides-extras = ["dev"]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "flake8" },
+    { name = "mypy", specifier = "==1.19.1" },
+]
 
 [[package]]
 name = "mccabe"
