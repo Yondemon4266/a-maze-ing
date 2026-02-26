@@ -29,7 +29,7 @@ jobs:
         run: uv sync 
 
       - name: Run MyPy
-        run: uv run mypy a_maze_ing.py src/
+        run: uv run mypy .
 
       - name: Run Flake8
-        run: uv run flake8 a_maze_ing.py src/
+        run: uv run flake8
