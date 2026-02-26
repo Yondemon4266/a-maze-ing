@@ -1,0 +1,18 @@
+
+# Maze width (number of cells)
+WIDTH=9
+
+# Maze height
+HEIGHT=10
+
+# Entry coordinates (x,y)
+ENTRY=0,0
+
+# Exit coordinates (x,y) 
+EXIT=0,1
+
+# Output filename
+OUTPUT_FILE=maze.txt
+
+# Is the maze perfect?
+PERFECT=False

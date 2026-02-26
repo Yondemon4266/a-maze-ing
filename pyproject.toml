@@ -12,7 +12,9 @@ authors = [
     {name = "aluslu", email = "aluslu@student.42lyon.fr"},
     {name = "advacher", email ="advacher@student.42lyon.fr"}
 ]
-dependencies = []
+dependencies = [
+    "pydantic>=2.12.5",
+]
 
 [dependency-groups]
 dev = [
