@@ -31,12 +31,27 @@ class MazeGenerator:
         self.maze_grid: list[list[int]] = self.initialize_maze()
         self.visited_grid = self.generate_visited_grid()
         self.generate_maze()
+        self.visited_solve = self.generate_visited_grid()
 
     def generate_visited_grid(self) -> list[list[bool]]:
         visited_grid: list[list[bool]] = []
         visited_grid = [[False] * self.width for _ in range(self.height)]
-        for pattern_y, pattern_x in self.pattern_centered_coords:
-            visited_grid[pattern_y][pattern_x] = True
+        if self.can_fit_pattern():
+            for pattern_y, pattern_x in self.pattern_centered_coords:
+                visited_grid[pattern_y][pattern_x] = True
+        # create maze sides
+        else:
+            for col in range(self.width):
+                if col == 0:
+                    visited_grid[0][col] = True
+                elif col == self.width - 1:
+                    visited_grid[col][-1] = True
+            for row in range(self.height):
+                if row == 0:
+                    visited_grid[row][0] = True
+                if row == self.height - 1:
+                    visited_grid[row][-1] = True
+
         return visited_grid
 
     def initialize_maze(self) -> list[list[int]]:
@@ -101,6 +116,8 @@ class MazeGenerator:
                 stack.pop()
 
     def create_pattern(self) -> None:
+        pattern_coords: list[tuple[int, int]] = []
+
         pattern_design: list[str] = [
             "#...###",
             "#.....#",
@@ -108,36 +125,35 @@ class MazeGenerator:
             "..#.#..",
             "..#.###",
         ]
-        # setup width and height of pattern
+
+        # fill pattern_coords with the position of
+        for row_idx, row_string in enumerate(pattern_design):
+            for col_idx, char in enumerate(row_string):
+                if char == "#":
+                    pattern_coords.append((row_idx, col_idx))
+
         self.pattern_width = max(len(row) for row in pattern_design)
         self.pattern_height = len(pattern_design)
 
-        pattern_coords: list[tuple[int, int]] = []
-
-        # if pattern doesnt fit, we dont fill pattern_coords and return
-        if not self.can_fit_42():
+        # if pattern doesnt fit, we dont fill pattern_coords
+        if not self.can_fit_pattern():
             print(
                 f"Error: Maze {self.width}x{self.height} is too small "
                 f"for pattern ({self.pattern_width + 2}x"
                 f"{self.pattern_height + 2})"
             )
-        # we fill pattern_coords with the pattern design
-        # and fill the abs pattern coords
-        for row_idx, row_string in enumerate(pattern_design):
-            for col_idx, char in enumerate(row_string):
-                if char == "#":
-                    pattern_coords.append((row_idx, col_idx))
-        start_pattern_col: int = (self.width - self.pattern_width) // 2
-        start_pattern_row: int = (self.height - self.pattern_height) // 2
-        for row, col in pattern_coords:
-            absolute_row: int = start_pattern_row + row
-            absolute_col: int = start_pattern_col + col
-            self.pattern_centered_coords.append(
-                (absolute_row, absolute_col),
-            )
+        else:
+            start_pattern_col: int = (self.width - self.pattern_width) // 2
+            start_pattern_row: int = (self.height - self.pattern_height) // 2
+            for row, col in pattern_coords:
+                absolute_row: int = start_pattern_row + row
+                absolute_col: int = start_pattern_col + col
+                self.pattern_centered_coords.append(
+                    (absolute_row, absolute_col),
+                )
 
     def check_if_entry_or_exit_in_pattern(self) -> None:
-        if self.can_fit_42():
+        if self.can_fit_pattern():
             if self.entry in self.pattern_centered_coords:
                 raise ValueError(
                     f"ENTRY {self.entry} is inside the '42' pattern area."
@@ -147,10 +163,52 @@ class MazeGenerator:
                     f"EXIT {self.exit} is inside the '42' pattern area."
                 )
 
-    def can_fit_42(self) -> bool:
+    def can_fit_pattern(self) -> bool:
         if (
             self.width >= self.pattern_width + 2
             and self.height >= self.pattern_height + 2
         ):
             return True
         return False
+
+    def solve(self) -> str | None:
+        path_solve: list[tuple[int, int, str]] = []
+        entry_row, entry_col = self.entry
+        path_solve.append((entry_row, entry_col, ""))
+
+        self.visited_solve[entry_row][entry_col] = True
+
+        # BFS loop: continue as long as there are cells left to explore
+        while path_solve:
+            current_row, current_col, current_path = path_solve.pop(0)
+            if (current_row, current_col) == self.exit:
+                return current_path
+
+        # 0 means no wall in that direction. 1=North, 2=East, 4=South, 8=West.
+        # AND cell above is unvisited
+
+            if (self.maze_grid[current_row][current_col] & 1 == 0 and
+                    self.visited_solve[current_row - 1][current_col] is False):
+                self.visited_solve[current_row - 1][current_col] = True
+                path_solve.append((
+                    current_row - 1, current_col, current_path + "N"))
+
+            if (self.maze_grid[current_row][current_col] & 4 == 0 and
+                    self.visited_solve[current_row + 1][current_col] is False):
+                self.visited_solve[current_row + 1][current_col] = True
+                path_solve.append((
+                    current_row + 1, current_col, current_path + "S"))
+
+            if (self.maze_grid[current_row][current_col] & 2 == 0 and
+                    self.visited_solve[current_row][current_col + 1] is False):
+                self.visited_solve[current_row][current_col + 1] = True
+                path_solve.append((
+                    current_row, current_col + 1, current_path + "E"))
+
+            if (self.maze_grid[current_row][current_col] & 8 == 0 and
+                    self.visited_solve[current_row][current_col - 1] is False):
+                self.visited_solve[current_row][current_col - 1] = True
+                path_solve.append((
+                    current_row, current_col - 1, current_path + "W"))
+
+        return None
