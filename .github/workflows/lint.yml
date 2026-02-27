@@ -1,0 +1,35 @@
+name: Linting (MyPy & Flake8)
+
+on:
+  push:
+    branches: [ "main", "dev" ]
+  pull_request:
+    branches: [ "main", "dev" ]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install dependencies
+        run: uv sync 
+
+      - name: Run MyPy
+        run: uv run mypy a_maze_ing.py mazegen/
+
+      - name: Run Flake8
+        run: uv run flake8 a_maze_ing.py mazegen/

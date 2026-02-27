@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mazegen"
+version = "1.0.0"
+description = "Maze generator module"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [
+    {name = "aluslu", email = "aluslu@student.42lyon.fr"},
+    {name = "advacher", email ="advacher@student.42lyon.fr"}
+]
+dependencies = [
+    "pydantic>=2.12.5",
+]
+
+[dependency-groups]
+dev = [
+    "mypy==1.19.1",
+    "flake8"
+]
+
+
+[tool.setuptools]
+packages = ["mazegen"]
+
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_ignores = true
+ignore_missing_imports = true
+disallow_untyped_defs = true
+check_untyped_defs = true
