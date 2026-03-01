@@ -2,6 +2,7 @@ import sys
 import mlx
 from mazegen.maze_generate import MazeGenerator
 
+
 def display_maze(maze: MazeGenerator) -> None:
 
     cell_size: int = 20  # Pixels maze
@@ -142,6 +143,8 @@ def display_maze(maze: MazeGenerator) -> None:
 
     def key_hook(keycode: int, param) -> int:
         if keycode in (53, 65307, 113):  # Esc or 'q'
+            mlx_app.mlx_destroy_window(mlx_ptr, win_ptr)
+            mlx_app.mlx_release(mlx_ptr)
             mlx_app.mlx_loop_exit(mlx_ptr)
 
         elif keycode in (32, 49):  # Space
