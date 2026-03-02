@@ -17,6 +17,7 @@ class GameState(TypedDict):
     frame_count: int
     path_progress: int
     solution: str | None
+    
 
 
 def display_maze(maze: MazeGenerator) -> None:
@@ -171,9 +172,7 @@ def display_maze(maze: MazeGenerator) -> None:
             else:
                 path_coords = [(px, py) for (py, px) in solution_path]
 
-            if state["frame_count"] % 1 == 0:
-                state["path_progress"] += 1
-
+            state["path_progress"] += 5
             limite = min(state["path_progress"], len(path_coords))
             path_animate = path_coords[:limite]
 
@@ -204,7 +203,6 @@ def display_maze(maze: MazeGenerator) -> None:
         elif keycode in (112, 35):  # 'p'
             state["show_path"] = not state["show_path"]
             state["path_progress"] = 0
-            state["solution"] = maze.solve()
             state["drawn"] = False
 
         elif keycode in (99, 8):  # 'c'
