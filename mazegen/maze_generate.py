@@ -30,6 +30,8 @@ class MazeGenerator:
         self._rng: random.Random = random.Random(seed)
 
         self.create_pattern()
+        self.check_if_entry_or_exit_in_pattern()
+
         self.maze_grid: list[list[int]] = self.initialize_maze()
         self.visited_grid = self.generate_visited_grid()
         self.generate_maze()
@@ -41,15 +43,6 @@ class MazeGenerator:
         if self.can_fit_pattern():
             for pattern_row, pattern_col in self.pattern_centered_coords:
                 visited_grid[pattern_row][pattern_col] = True
-
-        # create maze sides
-        else:
-            for col in range(self.width):
-                visited_grid[0][col] = True
-                visited_grid[self.height - 1][col] = True
-            for row in range(self.height):
-                visited_grid[row][0] = True
-                visited_grid[row][self.width - 1] = True
 
         return visited_grid
 

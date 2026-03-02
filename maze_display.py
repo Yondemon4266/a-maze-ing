@@ -115,17 +115,18 @@ def display_maze(maze: MazeGenerator) -> None:
 
     def draw_dynamic() -> None:
         # Animate Pattern
-        twinkle_idx = (state["frame_count"] // 8) % len(
-            state["pattern_colors"])
-        current_pattern_color = state["pattern_colors"][twinkle_idx]
+        if maze.can_fit_pattern():
+            twinkle_idx = (state["frame_count"] // 8) % len(
+                state["pattern_colors"])
+            current_pattern_color = state["pattern_colors"][twinkle_idx]
 
-        for row in range(maze.height):
-            for col in range(maze.width):
-                if maze.maze_grid[row][col] == 15:
-                    px = col * cell_size
-                    py = row * cell_size
-                    draw_rect(px, py, cell_size,
-                              cell_size, current_pattern_color)
+            for row in range(maze.height):
+                for col in range(maze.width):
+                    if maze.maze_grid[row][col] == 15:
+                        px = col * cell_size
+                        py = row * cell_size
+                        draw_rect(px, py, cell_size,
+                                cell_size, current_pattern_color)
 
         # Animate Path
         solution_path = state["solution"]
