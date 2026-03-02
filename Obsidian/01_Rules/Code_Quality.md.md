@@ -1,9 +1,9 @@
 # 📏 Code Standards and Quality
 
 ## 🐍 Environment and Standards
-- [ ] **Version:** The project must be written in Python 3.10 or later.
-- [ ] **Standard:** The project must adhere to the `flake8` coding standard.
-- [ ] **Main File:** The main program file must be named `a_maze_ing.py`.
+- [x] **Version:** The project must be written in Python 3.10 or later.
+- [x] **Standard:** The project must adhere to the `flake8` coding standard.
+- [x] **Main File:** The main program file must be named `a_maze_ing.py`.
 - [ ] **Isolation:** It is recommended to use virtual environments for dependency isolation during development. We will use `venv`.
 - [ ] **Git:** Include a `.gitignore` file to exclude Python (e.g. pycache, mypy_cache...).
 

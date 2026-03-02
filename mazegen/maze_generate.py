@@ -27,11 +27,9 @@ class MazeGenerator:
         self.pattern_width: int = 0
         self.pattern_height: int = 0
 
-        self.create_pattern()
-        self.check_if_entry_or_exit_in_pattern()
-
         self._rng: random.Random = random.Random(seed)
 
+        self.create_pattern()
         self.maze_grid: list[list[int]] = self.initialize_maze()
         self.visited_grid = self.generate_visited_grid()
         self.generate_maze()
