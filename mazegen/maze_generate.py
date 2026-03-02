@@ -172,6 +172,8 @@ class MazeGenerator:
                 self.height >= self.pattern_height + 2)
 
     def solve(self) -> str | None:
+        self.visited_solve = self.generate_visited_grid()
+
         path_solve: list[tuple[int, int, str]] = []
         entry_row, entry_col = self.entry
 

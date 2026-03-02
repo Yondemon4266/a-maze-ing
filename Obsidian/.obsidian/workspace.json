@@ -11,10 +11,14 @@
             "id": "dd4dca1bf06e1159",
             "type": "leaf",
             "state": {
-              "type": "empty",
-              "state": {},
+              "type": "markdown",
+              "state": {
+                "file": "01_Rules/Code_Quality.md.md",
+                "mode": "source",
+                "source": false
+              },
               "icon": "lucide-file",
-              "title": "New tab"
+              "title": "Code_Quality.md"
             }
           }
         ]
@@ -181,8 +185,8 @@
   },
   "active": "dd4dca1bf06e1159",
   "lastOpenFiles": [
-    "01_Rules/Code_Quality.md.md",
     "01_Rules/Makefile.md.md",
+    "01_Rules/Code_Quality.md.md",
     "05_Packaging_Reusable/Reusable_Module_Packaging.md.md",
     "05_Packaging_Reusable/README_Requirements.md.md"
   ]

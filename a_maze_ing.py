@@ -1,8 +1,10 @@
 import sys
+
 from maze_config_parser import MazeConfigParser
 from maze_config import MazeConfig
 from mazegen.maze_generate import MazeGenerator
-from maze_parser_config_error import MazeConfigParserError
+from maze_config_parser_error import MazeConfigParserError
+from maze_display import display_maze
 from pydantic import ValidationError
 
 
@@ -35,9 +37,7 @@ def main() -> None:
             config.algorithm,
         )
         display_hexa(maze)
-    # maze_grid = initialize_maze(config_data)
-    # solution_path = solve_maze(maze_grid)
-    # render_maze(maze_grid, solution_path)
+        display_maze(maze)
 
     except MazeConfigParserError as err:
         sys.stderr.write(f"{err.__class__.__name__, err}")
