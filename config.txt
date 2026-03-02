@@ -9,7 +9,7 @@ HEIGHT=20
 ENTRY=0,4
 
 # Exit coordinates (x,y) 
-EXIT=6,9
+EXIT=0,9
 
 # Output filename
 OUTPUT_FILE=maze.txt
@@ -18,3 +18,4 @@ OUTPUT_FILE=maze.txt
 PERFECT=False
 
 
+SEED=45784

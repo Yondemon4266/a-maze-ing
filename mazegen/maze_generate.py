@@ -22,16 +22,13 @@ class MazeGenerator:
         self.perfect: bool = perfect
         self.seed: Optional[str] = seed
         self.algorithm: Optional[str] = algorithm
-
+        print(self.seed)
         self.pattern_centered_coords: list[tuple[int, int]] = []
         self.pattern_width: int = 0
         self.pattern_height: int = 0
 
         self.create_pattern()
         self.check_if_entry_or_exit_in_pattern()
-
-        self._rng: random.Random = random.Random(seed)
-
         self.maze_grid: list[list[int]] = self.initialize_maze()
         self.visited_grid = self.generate_visited_grid()
         self.generate_maze()
@@ -59,6 +56,7 @@ class MazeGenerator:
         return [[15] * self.width for _ in range(self.height)]
 
     def generate_maze(self) -> None:
+        self._rng: random.Random = random.Random(self.seed)
         stack: list[tuple[int, int]] = []
         entry_row, entry_col = self.entry
 
@@ -97,7 +95,7 @@ class MazeGenerator:
                 valid_neighbors.append(("West", current_row, current_col - 1))
 
             if valid_neighbors:
-                chosen_direction, next_row, next_col = random.choice(
+                chosen_direction, next_row, next_col = self._rng.choice(
                     valid_neighbors
                 )
 
@@ -168,8 +166,10 @@ class MazeGenerator:
                 )
 
     def can_fit_pattern(self) -> bool:
-        return (self.width >= self.pattern_width + 2 and
-                self.height >= self.pattern_height + 2)
+        return (
+            self.width >= self.pattern_width + 2
+            and self.height >= self.pattern_height + 2
+        )
 
     def solve(self) -> str | None:
         self.visited_solve = self.generate_visited_grid()
@@ -186,32 +186,44 @@ class MazeGenerator:
             if (current_row, current_col) == self.exit:
                 return current_path
 
-        # 0 means no wall in that direction. 1=North, 2=East, 4=South, 8=West.
-        # AND cell above is unvisited
+            # 0 means no wall in that direction. 1=North, 2=East, 4=South, 8=West.
+            # AND cell above is unvisited
 
-            if (self.maze_grid[current_row][current_col] & 1 == 0 and
-                    self.visited_solve[current_row - 1][current_col] is False):
+            if (
+                self.maze_grid[current_row][current_col] & 1 == 0
+                and self.visited_solve[current_row - 1][current_col] is False
+            ):
                 self.visited_solve[current_row - 1][current_col] = True
-                path_solve.append((
-                    current_row - 1, current_col, current_path + "N"))
+                path_solve.append(
+                    (current_row - 1, current_col, current_path + "N")
+                )
 
-            if (self.maze_grid[current_row][current_col] & 4 == 0 and
-                    self.visited_solve[current_row + 1][current_col] is False):
+            if (
+                self.maze_grid[current_row][current_col] & 4 == 0
+                and self.visited_solve[current_row + 1][current_col] is False
+            ):
                 self.visited_solve[current_row + 1][current_col] = True
-                path_solve.append((
-                    current_row + 1, current_col, current_path + "S"))
+                path_solve.append(
+                    (current_row + 1, current_col, current_path + "S")
+                )
 
-            if (self.maze_grid[current_row][current_col] & 2 == 0 and
-                    self.visited_solve[current_row][current_col + 1] is False):
+            if (
+                self.maze_grid[current_row][current_col] & 2 == 0
+                and self.visited_solve[current_row][current_col + 1] is False
+            ):
                 self.visited_solve[current_row][current_col + 1] = True
-                path_solve.append((
-                    current_row, current_col + 1, current_path + "E"))
+                path_solve.append(
+                    (current_row, current_col + 1, current_path + "E")
+                )
 
-            if (self.maze_grid[current_row][current_col] & 8 == 0 and
-                    self.visited_solve[current_row][current_col - 1] is False):
+            if (
+                self.maze_grid[current_row][current_col] & 8 == 0
+                and self.visited_solve[current_row][current_col - 1] is False
+            ):
                 self.visited_solve[current_row][current_col - 1] = True
-                path_solve.append((
-                    current_row, current_col - 1, current_path + "W"))
+                path_solve.append(
+                    (current_row, current_col - 1, current_path + "W")
+                )
 
         return None
 
