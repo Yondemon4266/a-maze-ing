@@ -44,6 +44,7 @@ def main() -> None:
     try:
         print(f"Attempting to load configuration from: {config_file}")
         config: MazeConfig = MazeConfigParser.load_config(config_file)
+        print(config)
         maze: MazeGenerator = MazeGenerator(
             config.width,
             config.height,

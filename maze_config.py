@@ -14,7 +14,7 @@ class MazeConfig(BaseModel):
     output_file: str = Field(pattern=r"^[a-zA-Z_]+\.txt$")
 
     seed: Optional[str] = Field(default=None)
-    algorithm: str = "PRIM"
+    algorithm: str = Field(default="DFS")
 
     # parse coords of entry and exit keys before
     @field_validator("entry", "exit", mode="before")

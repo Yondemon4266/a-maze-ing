@@ -3,6 +3,13 @@ from typing import Optional
 
 
 class MazeGenerator:
+    NORTH = 1  # 0001
+    EAST = 2  # 0010
+    SOUTH = 4  # 0100
+    WEST = 8  # 1000
+
+    OPPOSITE = {NORTH: SOUTH, SOUTH: NORTH, EAST: WEST, WEST: EAST}
+
     def __init__(
         self,
         width: int,
@@ -12,7 +19,7 @@ class MazeGenerator:
         output_file: str,
         perfect: bool,
         seed: Optional[str] = None,
-        algorithm: Optional[str] = None,
+        algorithm: str = "DFS",
     ):
         self.width: int = width
         self.height: int = height
@@ -21,7 +28,7 @@ class MazeGenerator:
         self.output_file: str = output_file
         self.perfect: bool = perfect
         self.seed: Optional[str] = seed
-        self.algorithm: Optional[str] = algorithm
+        self.algorithm: str = algorithm
         self.pattern_centered_coords: list[tuple[int, int]] = []
         self.pattern_width: int = 0
         self.pattern_height: int = 0
@@ -29,6 +36,7 @@ class MazeGenerator:
         self.check_if_entry_or_exit_in_pattern()
         self.maze_grid: list[list[int]] = self.initialize_maze()
         self.visited_grid = self.generate_visited_grid()
+        self.accepted_algorithms: list[str] = ["dfs", "prim"]
         self.generate_maze()
         self.visited_solve = self.generate_visited_grid()
         self.solved_path: Optional[str] = None
@@ -40,22 +48,25 @@ class MazeGenerator:
             for pattern_row, pattern_col in self.pattern_centered_coords:
                 visited_grid[pattern_row][pattern_col] = True
 
-        # create maze sides
-        else:
-            for col in range(self.width):
-                visited_grid[0][col] = True
-                visited_grid[self.height - 1][col] = True
-            for row in range(self.height):
-                visited_grid[row][0] = True
-                visited_grid[row][self.width - 1] = True
-
         return visited_grid
 
     def initialize_maze(self) -> list[list[int]]:
         return [[15] * self.width for _ in range(self.height)]
 
     def generate_maze(self) -> None:
+        print(self.algorithm)
         self._rng: random.Random = random.Random(self.seed)
+        if self.algorithm.lower() not in self.accepted_algorithms:
+            raise ValueError(
+                f"The selected algorithm {self.algorithm} "
+                "is not implemented in our MazeGenerator"
+            )
+        if self.algorithm.lower() == "dfs":
+            self.dfs_generate_algorithm()
+        if self.algorithm.lower() == "prim":
+            self.prim_generate_algorithm()
+
+    def dfs_generate_algorithm(self) -> None:
         stack: list[tuple[int, int]] = []
         entry_row, entry_col = self.entry
 
@@ -114,6 +125,52 @@ class MazeGenerator:
                     self.maze_grid[next_row][next_col] -= 2
             else:
                 stack.pop()
+
+    def prim_generate_algorithm(self) -> None:
+        entry_row, entry_col = self.entry
+        self.visited_grid[entry_row][entry_col] = True
+
+        valid_walls: list[tuple[int, int, int, int, int]] = (
+            self._get_adj_walls(entry_col, entry_row)
+        )
+        while valid_walls:
+            random_index = self._rng.randrange(len(valid_walls))
+            col1, row1, col2, row2, direction_bit = valid_walls.pop(
+                random_index
+            )
+            if not self.visited_grid[row2][col2]:
+                self._break_wall(col1, row1, col2, row2, direction_bit)
+                self.visited_grid[row2][col2] = True
+                new_walls = self._get_adj_walls(col2, row2)
+                valid_walls.extend(new_walls)
+
+    def _get_adj_walls(
+        self, col: int, row: int
+    ) -> list[tuple[int, int, int, int, int]]:
+        valid_walls: list[tuple[int, int, int, int, int]] = []
+        directions = [
+            (0, -1, self.NORTH),
+            (1, 0, self.EAST),
+            (0, 1, self.SOUTH),
+            (-1, 0, self.WEST),
+        ]
+
+        for dcol, drow, direction_bit in directions:
+            ncol, nrow = col + dcol, row + drow
+
+            within_bounds: bool = (
+                0 <= ncol < self.width and 0 <= nrow < self.height
+            )
+            if within_bounds and not self.visited_grid[nrow][ncol]:
+                valid_walls.append((col, row, ncol, nrow, direction_bit))
+
+        return valid_walls
+
+    def _break_wall(
+        self, x1: int, y1: int, x2: int, y2: int, direction: int
+    ) -> None:
+        self.maze_grid[y1][x1] &= ~direction
+        self.maze_grid[y2][x2] &= ~self.OPPOSITE[direction]
 
     def create_pattern(self) -> None:
         pattern_coords: list[tuple[int, int]] = []
@@ -231,5 +288,5 @@ class MazeGenerator:
     def regenerate(self) -> None:
         self.maze_grid = self.initialize_maze()
         self.visited_grid = self.generate_visited_grid()
-        self.generate_maze()
         self.visited_solve = self.generate_visited_grid()
+        self.generate_maze()
