@@ -33,7 +33,8 @@ def display_maze(maze: MazeGenerator) -> None:
         return
 
     win_ptr = mlx_app.mlx_new_window(
-        mlx_ptr, win_width, win_height, "A-Maze-ing")
+        mlx_ptr, win_width, win_height, "A-Maze-ing"
+    )
 
     # State Management for Interactions
     state: GameState = {
@@ -41,7 +42,7 @@ def display_maze(maze: MazeGenerator) -> None:
         "color_theme_idx": 0,
         "wall_colors": [0xFF00FF00, 0xFF00FFFF, 0xFFFF00FF],  # Opaques
         "bg_color": 0xFF000000,
-        "path_color": 0xFFFFD700,         # Gold path
+        "path_color": 0xFFFFD700,  # Gold path
         "entry_color": 0xFF00FF00,
         "exit_color": 0xFFFF0000,
         "pattern_colors": [0xFF8822CC, 0xFFAA44EE, 0xFFCC88FF, 0xFFAA44EE],
@@ -49,7 +50,7 @@ def display_maze(maze: MazeGenerator) -> None:
         "drawn": False,
         "frame_count": 0,
         "path_progress": 0,
-        "solution": maze.solve()
+        "solution": maze.solved_path,
     }
 
     def draw_h_line(x: int, y: int, length: int, color: int) -> None:
@@ -72,18 +73,24 @@ def display_maze(maze: MazeGenerator) -> None:
         # UI
         ui_x = (maze.width * cell_size) + 20
         text_color = 0xFFFFFF
-        mlx_app.mlx_string_put(mlx_ptr, win_ptr, ui_x, 40,
-                               text_color, "    === MENU ===")
-        mlx_app.mlx_string_put(mlx_ptr, win_ptr, ui_x, 80,
-                               text_color, "Space  : New maze")
-        mlx_app.mlx_string_put(mlx_ptr, win_ptr, ui_x, 105,
-                               text_color, "P      : Display")
-        mlx_app.mlx_string_put(mlx_ptr, win_ptr, ui_x, 125,
-                               text_color, "         Hide path")
-        mlx_app.mlx_string_put(mlx_ptr, win_ptr, ui_x, 150,
-                               text_color, "C      : Change colors")
-        mlx_app.mlx_string_put(mlx_ptr, win_ptr, ui_x, 175,
-                               text_color, "Q/Esc  : Quit")
+        mlx_app.mlx_string_put(
+            mlx_ptr, win_ptr, ui_x, 40, text_color, "    === MENU ==="
+        )
+        mlx_app.mlx_string_put(
+            mlx_ptr, win_ptr, ui_x, 80, text_color, "Space  : New maze"
+        )
+        mlx_app.mlx_string_put(
+            mlx_ptr, win_ptr, ui_x, 105, text_color, "P      : Display"
+        )
+        mlx_app.mlx_string_put(
+            mlx_ptr, win_ptr, ui_x, 125, text_color, "         Hide path"
+        )
+        mlx_app.mlx_string_put(
+            mlx_ptr, win_ptr, ui_x, 150, text_color, "C      : Change colors"
+        )
+        mlx_app.mlx_string_put(
+            mlx_ptr, win_ptr, ui_x, 175, text_color, "Q/Esc  : Quit"
+        )
 
         # Wall
         for row in range(maze.height):
@@ -96,28 +103,47 @@ def display_maze(maze: MazeGenerator) -> None:
                     if cell_val & 1:  # North
                         draw_h_line(px, py, cell_size, current_wall_color)
                     if cell_val & 2:  # East
-                        draw_v_line(px + cell_size - 1, py,
-                                    cell_size, current_wall_color)
+                        draw_v_line(
+                            px + cell_size - 1,
+                            py,
+                            cell_size,
+                            current_wall_color,
+                        )
                     if cell_val & 4:  # South
-                        draw_h_line(px, py + cell_size - 1,
-                                    cell_size, current_wall_color)
+                        draw_h_line(
+                            px,
+                            py + cell_size - 1,
+                            cell_size,
+                            current_wall_color,
+                        )
                     if cell_val & 8:  # West
                         draw_v_line(px, py, cell_size, current_wall_color)
 
         # Entry / Exit
         ey, ex = maze.entry
-        draw_rect(ex * cell_size + 2, ey * cell_size + 2, cell_size - 4,
-                  cell_size - 4, state["entry_color"])
+        draw_rect(
+            ex * cell_size + 2,
+            ey * cell_size + 2,
+            cell_size - 4,
+            cell_size - 4,
+            state["entry_color"],
+        )
 
         xy, xx = maze.exit
-        draw_rect(xx * cell_size + 2, xy * cell_size + 2, cell_size - 4,
-                  cell_size - 4, state["exit_color"])
+        draw_rect(
+            xx * cell_size + 2,
+            xy * cell_size + 2,
+            cell_size - 4,
+            cell_size - 4,
+            state["exit_color"],
+        )
 
     def draw_dynamic() -> None:
         # Animate Pattern
         if maze.can_fit_pattern():
             twinkle_idx = (state["frame_count"] // 8) % len(
-                state["pattern_colors"])
+                state["pattern_colors"]
+            )
             current_pattern_color = state["pattern_colors"][twinkle_idx]
 
             for row in range(maze.height):
@@ -125,17 +151,18 @@ def display_maze(maze: MazeGenerator) -> None:
                     if maze.maze_grid[row][col] == 15:
                         px = col * cell_size
                         py = row * cell_size
-                        draw_rect(px, py, cell_size,
-                                cell_size, current_pattern_color)
+                        draw_rect(
+                            px, py, cell_size, cell_size, current_pattern_color
+                        )
 
         # Animate Path
-        solution_path = state["solution"]
+        solution_path: str | None = state["solution"]
         if state["show_path"] and solution_path:
             path_coords = []
             curr_y, curr_x = maze.entry
 
             if isinstance(solution_path, str):
-                moves = {'N': (-1, 0), 'S': (1, 0), 'E': (0, 1), 'W': (0, -1)}
+                moves = {"N": (-1, 0), "S": (1, 0), "E": (0, 1), "W": (0, -1)}
                 for move in solution_path:
                     dy, dx = moves[move]
                     curr_y += dy
@@ -152,9 +179,13 @@ def display_maze(maze: MazeGenerator) -> None:
 
             for px, py in path_animate:
                 if (py, px) not in (maze.entry, maze.exit):
-                    draw_rect(px * cell_size + 6, py * cell_size + 6,
-                              cell_size - 12,
-                              cell_size - 12, state["path_color"])
+                    draw_rect(
+                        px * cell_size + 6,
+                        py * cell_size + 6,
+                        cell_size - 12,
+                        cell_size - 12,
+                        state["path_color"],
+                    )
 
         mlx_app.mlx_do_sync(mlx_ptr)
 
@@ -177,8 +208,9 @@ def display_maze(maze: MazeGenerator) -> None:
             state["drawn"] = False
 
         elif keycode in (99, 8):  # 'c'
-            state["color_theme_idx"] = (
-                state["color_theme_idx"] + 1) % len(state["wall_colors"])
+            state["color_theme_idx"] = (state["color_theme_idx"] + 1) % len(
+                state["wall_colors"]
+            )
             state["drawn"] = False
 
         return 0
