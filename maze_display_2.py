@@ -20,8 +20,9 @@ class GameState(TypedDict):
 
 
 def display_maze(maze: MazeGenerator) -> None:
+
     cell_size: int = 20  # Pixels
-    ui_width: int = 250  # UI
+    ui_width: int = 250  # UI space
     win_width: int = (maze.width * cell_size) + ui_width
     win_height: int = maze.height * cell_size
 
@@ -34,8 +35,6 @@ def display_maze(maze: MazeGenerator) -> None:
     win_ptr = mlx_app.mlx_new_window(
         mlx_ptr, win_width, win_height, "A-Maze-ing"
     )
-
-    # Memory image creation for fast rendering.
     img_ptr = mlx_app.mlx_new_image(mlx_ptr, win_width, win_height)
     img_data, bpp, size_line, endian = mlx_app.mlx_get_data_addr(img_ptr)
     bytes_per_pixel = bpp // 8
@@ -44,71 +43,36 @@ def display_maze(maze: MazeGenerator) -> None:
     state: GameState = {
         "show_path": True,
         "color_theme_idx": 0,
-        "wall_colors": [0xFF00FF00, 0xFF00FFFF, 0xFFFF00FF],
+        "wall_colors": [0xFF00FF00, 0xFF00FFFF, 0xFFFF00FF],  # Opaques
         "bg_color": 0xFF000000,
-        "path_color": 0xFFFFD700,
+        "path_color": 0xFFFFD700,  # Gold path
         "entry_color": 0xFF00FF00,
         "exit_color": 0xFFFF0000,
         "pattern_colors": [0xFF8822CC, 0xFFAA44EE, 0xFFCC88FF, 0xFFAA44EE],
+        # Purple pattern 42
         "drawn": False,
         "frame_count": 0,
         "path_progress": 0,
         "solution": maze.solved_path,
     }
 
+    def put_pixel_img(x: int, y: int, color: int) -> None:
+        """Écrit un pixel directement dans le buffer mémoire de l'image."""
+        if 0 <= x < win_width and 0 <= y < win_height:
+            idx = (y * size_line) + (x * bytes_per_pixel)
+            # Little Endian (format : B8G8R8A8 )
+            img_data[idx] = color & 0xFF
+            img_data[idx + 1] = (color >> 8) & 0xFF
+            img_data[idx + 2] = (color >> 16) & 0xFF
+            img_data[idx + 3] = (color >> 24) & 0xFF
+
     def draw_h_line(x: int, y: int, length: int, color: int) -> None:
-        """Remplit une ligne horizontale d'un seul coup via slicing (Ultra-rapide)."""
-        if not (0 <= y < win_height) or x >= win_width:
-            return
-            
-        # Truncate if line exceeds window bounds.
-        if x < 0:
-            length += x
-            x = 0
-        if x + length > win_width:
-            length = win_width - x
-        if length <= 0:
-            return
-
-        # Prepare 4-byte pixel (Little Endian).
-        b1 = color & 0xFF
-        b2 = (color >> 8) & 0xFF
-        b3 = (color >> 16) & 0xFF
-        b4 = (color >> 24) & 0xFF
-
-        # Batch-multiply bytes to generate full line (under-the-hood C).
-        row_bytes = bytes([b1, b2, b3, b4]) * length
-
-        start_idx = (y * size_line) + (x * bytes_per_pixel)
-        end_idx = start_idx + (length * bytes_per_pixel)
-
-        # Bulk memory replacement.
-        img_data[start_idx:end_idx] = row_bytes
+        for i in range(length):
+            put_pixel_img(x + i, y, color)
 
     def draw_v_line(x: int, y: int, length: int, color: int) -> None:
-        """Dessine une ligne verticale de manière optimisée."""
-        if not (0 <= x < win_width) or y >= win_height:
-            return
-
-        if y < 0:
-            length += y
-            y = 0
-        if y + length > win_height:
-            length = win_height - y
-        if length <= 0:
-            return
-
-        b1, b2, b3, b4 = color & 0xFF, (color >> 8) & 0xFF, (color >> 16) & 0xFF, (color >> 24) & 0xFF
-        idx = (y * size_line) + (x * bytes_per_pixel)
-        max_idx = len(img_data)
-
-        for _ in range(length):
-            if idx + 3 < max_idx:
-                img_data[idx] = b1
-                img_data[idx+1] = b2
-                img_data[idx+2] = b3
-                img_data[idx+3] = b4
-            idx += size_line
+        for i in range(length):
+            put_pixel_img(x, y + i, color)
 
     def draw_rect(x: int, y: int, width: int, height: int, color: int) -> None:
         for i in range(height):
@@ -147,11 +111,11 @@ def display_maze(maze: MazeGenerator) -> None:
             cell_size - 4, cell_size - 4, state["exit_color"]
         )
 
-    def draw_dynamic(param: GameState) -> None:
+    def draw_dynamic() -> None:
         # Animate Pattern
         if maze.can_fit_pattern():
-            twinkle_idx = (param["frame_count"] // 8) % len(param["pattern_colors"])
-            current_pattern_color = param["pattern_colors"][twinkle_idx]
+            twinkle_idx = (state["frame_count"] // 8) % len(state["pattern_colors"])
+            current_pattern_color = state["pattern_colors"][twinkle_idx]
 
             for row in range(maze.height):
                 for col in range(maze.width):
@@ -160,8 +124,9 @@ def display_maze(maze: MazeGenerator) -> None:
                         py = row * cell_size
                         draw_rect(px, py, cell_size, cell_size, current_pattern_color)
 
-        solution_path: str | None = param["solution"]
-        if param["show_path"] and solution_path:
+        # Animate Path
+        solution_path: str | None = state["solution"]
+        if state["show_path"] and solution_path:
             path_coords = []
             curr_y, curr_x = maze.entry
 
@@ -175,15 +140,15 @@ def display_maze(maze: MazeGenerator) -> None:
             else:
                 path_coords = [(px, py) for (py, px) in solution_path]
 
-            param["path_progress"] += 5
-            limite = min(param["path_progress"], len(path_coords))
+            state["path_progress"] += 5
+            limite = min(state["path_progress"], len(path_coords))
             path_animate = path_coords[:limite]
 
             for px, py in path_animate:
                 if (py, px) not in (maze.entry, maze.exit):
                     draw_rect(
                         px * cell_size + 6, py * cell_size + 6,
-                        cell_size - 12, cell_size - 12, param["path_color"]
+                        cell_size - 12, cell_size - 12, state["path_color"]
                     )
 
     def draw_ui() -> None:
@@ -196,50 +161,41 @@ def display_maze(maze: MazeGenerator) -> None:
         mlx_app.mlx_string_put(mlx_ptr, win_ptr, ui_x, 150, text_color, "C      : Change colors")
         mlx_app.mlx_string_put(mlx_ptr, win_ptr, ui_x, 175, text_color, "Q/Esc  : Quit")
 
-    def key_hook(keycode: int, param: GameState) -> int:
+    def key_hook(keycode: int, state: GameState) -> int:
         if keycode in (53, 65307, 113):  # Esc or 'q'
+            mlx_app.mlx_destroy_window(mlx_ptr, win_ptr)
+            mlx_app.mlx_release(mlx_ptr)
             mlx_app.mlx_loop_exit(mlx_ptr)
 
         elif keycode in (32, 49):  # Space
-            param["path_progress"] = 0
+            state["path_progress"] = 0
             maze.regenerate()
-            param["solution"] = maze.solve()
-            param["drawn"] = False
+            state["solution"] = maze.solve()
+            state["drawn"] = False
 
         elif keycode in (112, 35):  # 'p'
-            param["show_path"] = not param["show_path"]
-            param["path_progress"] = 0
-            param["drawn"] = False
+            state["show_path"] = not state["show_path"]
+            state["path_progress"] = 0
+            state["drawn"] = False
 
         elif keycode in (99, 8):  # 'c'
-            param["color_theme_idx"] = (param["color_theme_idx"] + 1) % len(param["wall_colors"])
-            param["drawn"] = False
+            state["color_theme_idx"] = (state["color_theme_idx"] + 1) % len(state["wall_colors"])
+            state["drawn"] = False
 
         return 0
 
-    def render_loop_hook(param: GameState) -> int:
-        param["frame_count"] += 1
-
-        if not param["drawn"]:
+    def render_loop_hook(state: GameState) -> int:
+        state["frame_count"] += 1
+        if not state["drawn"]:
             draw_static()
-            param["drawn"] = True
+            state["drawn"] = True
 
-        draw_dynamic(param)
-
-        # Push the complete image to the window.
+        draw_dynamic()
         mlx_app.mlx_put_image_to_window(mlx_ptr, win_ptr, img_ptr, 0, 0)
-        # Render text overlays on top of the image.
         draw_ui()
         mlx_app.mlx_do_sync(mlx_ptr)
         return 0
 
-    # Register hooks with the state parameter.
     mlx_app.mlx_key_hook(win_ptr, key_hook, state)
     mlx_app.mlx_loop_hook(mlx_ptr, render_loop_hook, state)
-
-    # Start the main event loop.
     mlx_app.mlx_loop(mlx_ptr)
-
-    # Clean up resources after exiting the loop.
-    mlx_app.mlx_destroy_window(mlx_ptr, win_ptr)
-    mlx_app.mlx_release(mlx_ptr)
