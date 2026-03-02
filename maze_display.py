@@ -1,6 +1,22 @@
 import sys
 import mlx
+from typing import TypedDict
 from mazegen.maze_generate import MazeGenerator
+
+
+class GameState(TypedDict):
+    show_path: bool
+    color_theme_idx: int
+    wall_colors: list[int]
+    bg_color: int
+    path_color: int
+    entry_color: int
+    exit_color: int
+    pattern_colors: list[int]
+    drawn: bool
+    frame_count: int
+    path_progress: int
+    solution: str | None
 
 
 def display_maze(maze: MazeGenerator) -> None:
@@ -20,7 +36,7 @@ def display_maze(maze: MazeGenerator) -> None:
         mlx_ptr, win_width, win_height, "A-Maze-ing")
 
     # State Management for Interactions
-    state = {
+    state: GameState = {
         "show_path": True,
         "color_theme_idx": 0,
         "wall_colors": [0xFF00FF00, 0xFF00FFFF, 0xFFFF00FF],  # Opaques
@@ -141,7 +157,7 @@ def display_maze(maze: MazeGenerator) -> None:
 
         mlx_app.mlx_do_sync(mlx_ptr)
 
-    def key_hook(keycode: int, param) -> int:
+    def key_hook(keycode: int, param: GameState) -> int:
         if keycode in (53, 65307, 113):  # Esc or 'q'
             mlx_app.mlx_destroy_window(mlx_ptr, win_ptr)
             mlx_app.mlx_release(mlx_ptr)
@@ -166,7 +182,7 @@ def display_maze(maze: MazeGenerator) -> None:
 
         return 0
 
-    def render_loop_hook(param) -> int:
+    def render_loop_hook(param: GameState) -> int:
         state["frame_count"] += 1
         if not state["drawn"]:
             draw_static()
