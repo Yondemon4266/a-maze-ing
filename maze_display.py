@@ -50,7 +50,7 @@ def display_maze(maze: MazeGenerator) -> None:
         "drawn": False,
         "frame_count": 0,
         "path_progress": 0,
-        "solution": maze.solve(),
+        "solution": maze.solved_path,
     }
 
     def draw_h_line(x: int, y: int, length: int, color: int) -> None:
@@ -156,7 +156,7 @@ def display_maze(maze: MazeGenerator) -> None:
                         )
 
         # Animate Path
-        solution_path = state["solution"]
+        solution_path: str | None = state["solution"]
         if state["show_path"] and solution_path:
             path_coords = []
             curr_y, curr_x = maze.entry

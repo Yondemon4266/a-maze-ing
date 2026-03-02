@@ -22,17 +22,16 @@ class MazeGenerator:
         self.perfect: bool = perfect
         self.seed: Optional[str] = seed
         self.algorithm: Optional[str] = algorithm
-        print(self.seed)
         self.pattern_centered_coords: list[tuple[int, int]] = []
         self.pattern_width: int = 0
         self.pattern_height: int = 0
-
         self.create_pattern()
         self.check_if_entry_or_exit_in_pattern()
         self.maze_grid: list[list[int]] = self.initialize_maze()
         self.visited_grid = self.generate_visited_grid()
         self.generate_maze()
         self.visited_solve = self.generate_visited_grid()
+        self.solved_path: Optional[str] = None
 
     def generate_visited_grid(self) -> list[list[bool]]:
         visited_grid: list[list[bool]] = []
@@ -184,9 +183,11 @@ class MazeGenerator:
         while path_solve:
             current_row, current_col, current_path = path_solve.pop(0)
             if (current_row, current_col) == self.exit:
+                self.solved_path = current_path
                 return current_path
 
-            # 0 means no wall in that direction. 1=North, 2=East, 4=South, 8=West.
+            # 0 means no wall in that direction. 1=North, 2=East, 4=South,
+            # 8=West.
             # AND cell above is unvisited
 
             if (

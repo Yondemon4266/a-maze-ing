@@ -12,7 +12,7 @@ ENTRY=0,4
 EXIT=0,9
 
 # Output filename
-OUTPUT_FILE=maze.txt
+OUTPUT_FILE=output_maze.txt
 
 # Is the maze perfect?
 PERFECT=False

@@ -8,12 +8,30 @@ from maze_display import display_maze
 from pydantic import ValidationError
 
 
-def display_hexa(maze: MazeGenerator) -> None:
+def get_maze_hexa(maze: MazeGenerator) -> list[str]:
+    lines: list[str] = []
     for y in range(maze.height):
         line: str = ""
         for x in range(maze.width):
             line += f"{maze.maze_grid[y][x]:X}"
-        print(line)
+        lines.append(line)
+    return lines
+
+
+def write_output_file(maze: MazeGenerator) -> None:
+    try:
+        with open(maze.output_file, "w") as file:
+            lines_hexa: list[str] = get_maze_hexa(maze)
+            for line in lines_hexa:
+                file.write(line + "\n")
+            file.write("\n")
+            entry_x, entry_y = maze.entry
+            exit_x, exit_y = maze.exit
+            file.write(",".join([str(entry_x), str(entry_y)]) + "\n")
+            file.write(",".join([str(exit_x), str(exit_y)]) + "\n")
+            file.write(str(maze.solved_path) + "\n")
+    except OSError as err:
+        print(err)
 
 
 def main() -> None:
@@ -36,7 +54,8 @@ def main() -> None:
             config.seed,
             config.algorithm,
         )
-        display_hexa(maze)
+        maze.solve()
+        write_output_file(maze)
         display_maze(maze)
 
     except MazeConfigParserError as err:
