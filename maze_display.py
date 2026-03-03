@@ -99,25 +99,24 @@ def display_maze(maze: MazeGenerator) -> None:
                 px = col * cell_size
                 py = row * cell_size
 
-                if cell_val != 15:
-                    if cell_val & 1:  # North
-                        draw_h_line(px, py, cell_size, current_wall_color)
-                    if cell_val & 2:  # East
-                        draw_v_line(
-                            px + cell_size - 1,
-                            py,
-                            cell_size,
-                            current_wall_color,
-                        )
-                    if cell_val & 4:  # South
-                        draw_h_line(
-                            px,
-                            py + cell_size - 1,
-                            cell_size,
-                            current_wall_color,
-                        )
-                    if cell_val & 8:  # West
-                        draw_v_line(px, py, cell_size, current_wall_color)
+                if cell_val & 1:  # North
+                    draw_h_line(px, py, cell_size, current_wall_color)
+                if cell_val & 2:  # East
+                    draw_v_line(
+                        px + cell_size - 1,
+                        py,
+                        cell_size,
+                        current_wall_color,
+                    )
+                if cell_val & 4:  # South
+                    draw_h_line(
+                        px,
+                        py + cell_size - 1,
+                        cell_size,
+                        current_wall_color,
+                    )
+                if cell_val & 8:  # West
+                    draw_v_line(px, py, cell_size, current_wall_color)
 
         # Entry / Exit
         ey, ex = maze.entry
@@ -171,8 +170,7 @@ def display_maze(maze: MazeGenerator) -> None:
             else:
                 path_coords = [(px, py) for (py, px) in solution_path]
 
-            if state["frame_count"] % 1 == 0:
-                state["path_progress"] += 1
+            state["path_progress"] += 5
 
             limite = min(state["path_progress"], len(path_coords))
             path_animate = path_coords[:limite]
