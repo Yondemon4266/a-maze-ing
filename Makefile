@@ -42,7 +42,7 @@ clean:
 	rm -rf .mypy_cache \
 	       mazegen-*.whl \
 	       mazegen-*.tar.gz \
-	       mazegen.egg-info* \
+	       src/mazegen.egg-info* \
 	       dist/
 	find . -type d -name "__pycache__" -exec rm -rf {} +
 
