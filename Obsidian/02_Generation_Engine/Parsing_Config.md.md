@@ -3,10 +3,10 @@
 The program takes a single argument, `config.txt`, which defines the maze generation options. 
 
 ## 📝 Parsing Rules
-- [ ] **Format:** The configuration file must contain one `KEY=VALUE` pair per line.
-- [ ] **Comments:** Lines starting with `#` are comments and must be ignored.
-- [ ] **Error Handling:** The program must handle all errors gracefully (invalid configuration, file not found, bad syntax, impossible parameters). It must never crash unexpectedly and must provide a clear error message.
-- [ ] **Default Config:** A default configuration file must be available in the Git repository.
+- [x] **Format:** The configuration file must contain one `KEY=VALUE` pair per line.
+- [x] **Comments:** Lines starting with `#` are comments and must be ignored.
+- [x] **Error Handling:** The program must handle all errors gracefully (invalid configuration, file not found, bad syntax, impossible parameters). It must never crash unexpectedly and must provide a clear error message.
+- [x] **Default Config:** A default configuration file must be available in the Git repository.
 
 ## 🔑 Mandatory Keys
 The following keys must be implemented and parsed correctly:

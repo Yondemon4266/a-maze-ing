@@ -6,7 +6,7 @@ We must include a `Makefile` in our project to automate common tasks.
 - [x] `install`: Install project dependencies. We will use `uv` as package manager because it become the industry standard for Python development.
 - [x] `run`: Execute the main script of the project (e.g., via Python interpreter).
 - [x] `debug`: Run the main script in debug mode using Python's built-in debugger (e.g., pdb).
-- [ ] `clean`: Remove temporary files or caches (e.g., pycache, mypy_cache) to keep the project environment clean.
+- [x] `clean`: Remove temporary files or caches (e.g., pycache, mypy_cache) to keep the project environment clean.
 - [x] `lint`: Execute the commands `flake8` and `mypy` with specific flags.
 - [x] `lint-strict` *(Optional)*: Execute the commands `flake8` and `mypy --strict`.
 
