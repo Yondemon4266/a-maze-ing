@@ -22,7 +22,8 @@ class GameState(TypedDict):
 def display_maze(maze: MazeGenerator) -> None:
     cell_size: int = 20  # Pixels
     ui_width: int = 250  # UI
-    win_width: int = (maze.width * cell_size) + ui_width
+    maze_width_px: int = maze.width * cell_size
+    win_width: int = maze_width_px + ui_width
     win_height: int = maze.height * cell_size
 
     mlx_app = mlx.Mlx()
@@ -36,7 +37,7 @@ def display_maze(maze: MazeGenerator) -> None:
     )
 
     # Memory image creation for fast rendering.
-    img_ptr = mlx_app.mlx_new_image(mlx_ptr, win_width, win_height)
+    img_ptr = mlx_app.mlx_new_image(mlx_ptr, maze_width_px, win_height)
     img_data, bpp, size_line, endian = mlx_app.mlx_get_data_addr(img_ptr)
     bytes_per_pixel = bpp // 8
 
@@ -57,10 +58,9 @@ def display_maze(maze: MazeGenerator) -> None:
     }
 
     def draw_h_line(x: int, y: int, length: int, color: int) -> None:
-        """Remplit une ligne horizontale d'un seul coup via slicing (Ultra-rapide)."""
         if not (0 <= y < win_height) or x >= win_width:
             return
-            
+
         # Truncate if line exceeds window bounds.
         if x < 0:
             length += x
@@ -76,7 +76,7 @@ def display_maze(maze: MazeGenerator) -> None:
         b3 = (color >> 16) & 0xFF
         b4 = (color >> 24) & 0xFF
 
-        # Batch-multiply bytes to generate full line (under-the-hood C).
+        # Batch-multiply bytes to generate full line.
         row_bytes = bytes([b1, b2, b3, b4]) * length
 
         start_idx = (y * size_line) + (x * bytes_per_pixel)
@@ -86,7 +86,6 @@ def display_maze(maze: MazeGenerator) -> None:
         img_data[start_idx:end_idx] = row_bytes
 
     def draw_v_line(x: int, y: int, length: int, color: int) -> None:
-        """Dessine une ligne verticale de manière optimisée."""
         if not (0 <= x < win_width) or y >= win_height:
             return
 
@@ -98,7 +97,11 @@ def display_maze(maze: MazeGenerator) -> None:
         if length <= 0:
             return
 
-        b1, b2, b3, b4 = color & 0xFF, (color >> 8) & 0xFF, (color >> 16) & 0xFF, (color >> 24) & 0xFF
+        b1 = color & 0xFF
+        b2 = (color >> 8) & 0xFF
+        b3 = (color >> 16) & 0xFF
+        b4 = (color >> 24) & 0xFF
+
         idx = (y * size_line) + (x * bytes_per_pixel)
         max_idx = len(img_data)
 
@@ -115,7 +118,7 @@ def display_maze(maze: MazeGenerator) -> None:
             draw_h_line(x, y + i, width, color)
 
     def draw_static() -> None:
-        draw_rect(0, 0, win_width, win_height, state["bg_color"])
+        draw_rect(0, 0, maze_width_px, win_height, state["bg_color"])
 
         current_wall_color = state["wall_colors"][state["color_theme_idx"]]
 
@@ -128,9 +131,11 @@ def display_maze(maze: MazeGenerator) -> None:
                 if cell_val & 1:  # North
                     draw_h_line(px, py, cell_size, current_wall_color)
                 if cell_val & 2:  # East
-                    draw_v_line(px + cell_size - 1, py, cell_size, current_wall_color)
+                    draw_v_line(px + cell_size - 1, py,
+                                cell_size, current_wall_color)
                 if cell_val & 4:  # South
-                    draw_h_line(px, py + cell_size - 1, cell_size, current_wall_color)
+                    draw_h_line(px, py + cell_size - 1,
+                                cell_size, current_wall_color)
                 if cell_val & 8:  # West
                     draw_v_line(px, py, cell_size, current_wall_color)
 
@@ -150,7 +155,8 @@ def display_maze(maze: MazeGenerator) -> None:
     def draw_dynamic(param: GameState) -> None:
         # Animate Pattern
         if maze.can_fit_pattern():
-            twinkle_idx = (param["frame_count"] // 8) % len(param["pattern_colors"])
+            twinkle_idx = ((param["frame_count"] // 8)
+                           % len(param["pattern_colors"]))
             current_pattern_color = param["pattern_colors"][twinkle_idx]
 
             for row in range(maze.height):
@@ -158,7 +164,8 @@ def display_maze(maze: MazeGenerator) -> None:
                     if maze.maze_grid[row][col] == 15:
                         px = col * cell_size
                         py = row * cell_size
-                        draw_rect(px, py, cell_size, cell_size, current_pattern_color)
+                        draw_rect(px, py, cell_size,
+                                  cell_size, current_pattern_color)
 
         solution_path: str | None = param["solution"]
         if param["show_path"] and solution_path:
@@ -189,12 +196,18 @@ def display_maze(maze: MazeGenerator) -> None:
     def draw_ui() -> None:
         ui_x = (maze.width * cell_size) + 20
         text_color = 0xFFFFFF
-        mlx_app.mlx_string_put(mlx_ptr, win_ptr, ui_x, 40, text_color, "    === MENU ===")
-        mlx_app.mlx_string_put(mlx_ptr, win_ptr, ui_x, 80, text_color, "Space  : New maze")
-        mlx_app.mlx_string_put(mlx_ptr, win_ptr, ui_x, 105, text_color, "P      : Display")
-        mlx_app.mlx_string_put(mlx_ptr, win_ptr, ui_x, 125, text_color, "         Hide path")
-        mlx_app.mlx_string_put(mlx_ptr, win_ptr, ui_x, 150, text_color, "C      : Change colors")
-        mlx_app.mlx_string_put(mlx_ptr, win_ptr, ui_x, 175, text_color, "Q/Esc  : Quit")
+        mlx_app.mlx_string_put(mlx_ptr, win_ptr,
+                               ui_x, 40, text_color, "    === MENU ===")
+        mlx_app.mlx_string_put(mlx_ptr, win_ptr,
+                               ui_x, 80, text_color, "Space  : New maze")
+        mlx_app.mlx_string_put(mlx_ptr, win_ptr,
+                               ui_x, 105, text_color, "P      : Display")
+        mlx_app.mlx_string_put(mlx_ptr, win_ptr,
+                               ui_x, 125, text_color, "         Hide path")
+        mlx_app.mlx_string_put(mlx_ptr, win_ptr,
+                               ui_x, 150, text_color, "C      : Change colors")
+        mlx_app.mlx_string_put(mlx_ptr, win_ptr,
+                               ui_x, 175, text_color, "Q/Esc  : Quit")
 
     def key_hook(keycode: int, param: GameState) -> int:
         if keycode in (53, 65307, 113):  # Esc or 'q'
@@ -212,25 +225,24 @@ def display_maze(maze: MazeGenerator) -> None:
             param["drawn"] = False
 
         elif keycode in (99, 8):  # 'c'
-            param["color_theme_idx"] = (param["color_theme_idx"] + 1) % len(param["wall_colors"])
+            param["color_theme_idx"] = ((param["color_theme_idx"] + 1)
+                                        % len(param["wall_colors"]))
             param["drawn"] = False
 
         return 0
 
     def render_loop_hook(param: GameState) -> int:
         param["frame_count"] += 1
+        draw_static()
+        draw_dynamic(param)
 
         if not param["drawn"]:
-            draw_static()
+            mlx_app.mlx_clear_window(mlx_ptr, win_ptr)
+            draw_ui()
             param["drawn"] = True
-
-        draw_dynamic(param)
 
         # Push the complete image to the window.
         mlx_app.mlx_put_image_to_window(mlx_ptr, win_ptr, img_ptr, 0, 0)
-        # Render text overlays on top of the image.
-        draw_ui()
-        mlx_app.mlx_do_sync(mlx_ptr)
         return 0
 
     # Register hooks with the state parameter.
