@@ -222,6 +222,10 @@ def display_maze(maze: MazeGenerator) -> None:
         mlx_app.mlx_string_put(mlx_ptr, win_ptr,
                                ui_x, 175, text_color, "Q/Esc  : Quit")
 
+    def expose_hook(param: GameState) -> int:
+        param["drawn"] = False  # Demande de redessiner l'UI
+        return 0
+
     def key_hook(keycode: int, param: GameState) -> int:
         if keycode in (53, 65307, 113):  # Esc or 'q'
             mlx_app.mlx_loop_exit(mlx_ptr)
@@ -249,6 +253,7 @@ def display_maze(maze: MazeGenerator) -> None:
 
         draw_static()
         draw_dynamic(param)
+
         mlx_app.mlx_put_image_to_window(mlx_ptr, win_ptr, img_ptr, 0, 0)
 
         if not param["drawn"]:
@@ -257,12 +262,11 @@ def display_maze(maze: MazeGenerator) -> None:
             draw_ui()
             param["drawn"] = True
 
-        # Push the complete image to the window.
-        # mlx_app.mlx_put_image_to_window(mlx_ptr, win_ptr, img_ptr, 0, 0)
         return 0
 
     # Register hooks with the state parameter.
     mlx_app.mlx_key_hook(win_ptr, key_hook, state)
+    mlx_app.mlx_expose_hook(win_ptr, expose_hook, state)
     mlx_app.mlx_loop_hook(mlx_ptr, render_loop_hook, state)
 
     # Start the main event loop.
