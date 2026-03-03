@@ -17,4 +17,5 @@ OUTPUT_FILE=output_maze.txt
 # Is the maze perfect?
 PERFECT=False
 
+
 SEED=42
