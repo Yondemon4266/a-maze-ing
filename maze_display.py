@@ -170,8 +170,7 @@ def display_maze(maze: MazeGenerator) -> None:
             else:
                 path_coords = [(px, py) for (py, px) in solution_path]
 
-            if state["frame_count"] % 1 == 0:
-                state["path_progress"] += 1
+            state["path_progress"] += 5
 
             limite = min(state["path_progress"], len(path_coords))
             path_animate = path_coords[:limite]

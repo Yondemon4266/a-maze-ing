@@ -1,21 +1,20 @@
 
 # Maze width (number of cells)
-WIDTH=20
+WIDTH=50
 
 # Maze height
-HEIGHT=20
+HEIGHT=50
 
 # Entry coordinates (x,y)
-ENTRY=17,18
+ENTRY=17,32
 
 # Exit coordinates (x,y) 
-EXIT=5,8
+EXIT=5,18
 
 # Output filename
 OUTPUT_FILE=output_maze.txt
 
 # Is the maze perfect?
-PERFECT=False
+PERFECT=FALSE
 
-
-SEED=42
+ALGORITHM=DFS

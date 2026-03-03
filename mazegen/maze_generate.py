@@ -54,7 +54,6 @@ class MazeGenerator:
         return [[15] * self.width for _ in range(self.height)]
 
     def generate_maze(self) -> None:
-        print(self.algorithm)
         self._rng: random.Random = random.Random(self.seed)
         if self.algorithm.lower() not in self.accepted_algorithms:
             raise ValueError(
@@ -65,6 +64,9 @@ class MazeGenerator:
             self.dfs_generate_algorithm()
         if self.algorithm.lower() == "prim":
             self.prim_generate_algorithm()
+
+        if not self.perfect:
+            self.make_imperfect()
 
     def dfs_generate_algorithm(self) -> None:
         stack: list[tuple[int, int]] = []
@@ -278,6 +280,50 @@ class MazeGenerator:
                 )
 
         return None
+
+    def make_imperfect(self) -> None:
+        chance: float = 0.42
+        for current_row in range(self.height - 1):
+            for current_col in range(self.width - 1):
+                if (current_row, current_col) in self.pattern_centered_coords:
+                    continue
+
+                for drow, dcol, direction in [
+                    (0, 1, self.EAST),
+                    (1, 0, self.SOUTH),
+                ]:
+                    next_row, next_col = current_row + drow, current_col + dcol
+                    if (
+                        0 <= next_row < self.height
+                        and 0 <= next_col < self.width
+                        and (next_row, next_col)
+                        not in self.pattern_centered_coords
+                    ):
+
+                        if (
+                            self.maze_grid[current_row][current_col]
+                            & direction
+                        ):
+                            if self._rng.random() < chance:
+                                if (
+                                    bin(
+                                        self.maze_grid[current_row][
+                                            current_col
+                                        ]
+                                    ).count("1")
+                                    > 1
+                                    and bin(
+                                        self.maze_grid[next_row][next_col]
+                                    ).count("1")
+                                    > 1
+                                ):
+                                    self._break_wall(
+                                        current_row,
+                                        current_col,
+                                        next_row,
+                                        next_col,
+                                        direction,
+                                    )
 
     def regenerate(self) -> None:
         self.maze_grid = self.initialize_maze()
