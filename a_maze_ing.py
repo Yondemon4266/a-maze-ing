@@ -25,8 +25,8 @@ def write_output_file(maze: MazeGenerator) -> None:
             for line in lines_hexa:
                 file.write(line + "\n")
             file.write("\n")
-            entry_x, entry_y = maze.config.entry
-            exit_x, exit_y = maze.config.exit
+            entry_y, entry_x = maze.config.entry
+            exit_y, exit_x = maze.config.exit
             file.write(",".join([str(entry_x), str(entry_y)]) + "\n")
             file.write(",".join([str(exit_x), str(exit_y)]) + "\n")
             file.write(str(maze.solved_path) + "\n")

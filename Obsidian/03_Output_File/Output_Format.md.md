@@ -3,8 +3,8 @@
 The generated maze must be saved to the file specified by the `OUTPUT_FILE` key in the configuration. The file must strictly follow this structural layout.
 
 ## 📝 Layout Rules
-- [ ] **Grid Representation:** Cells are stored row by row, with one row per line.
-- [ ] **Separator:** After the maze grid is fully printed, there must be exactly one empty line.
+- [x] **Grid Representation:** Cells are stored row by row, with one row per line.
+- [x] **Separator:** After the maze grid is fully printed, there must be exactly one empty line.
 - [ ] **Footer Elements:** Following the empty line, these 3 elements must be inserted on 3 separate lines:
     1. The entry coordinates (e.g., `1,1`).
     2. The exit coordinates (e.g., `19,14`).
