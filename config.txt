@@ -15,6 +15,6 @@ EXIT=5,18
 OUTPUT_FILE=output_maze.txt
 
 # Is the maze perfect?
-PERFECT=FALSE
+PERFECT=true
 
-ALGORITHM=DFS
+ALGORITHM=prim

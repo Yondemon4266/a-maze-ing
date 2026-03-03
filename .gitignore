@@ -2,4 +2,3 @@ __pycache__/
 .mypy_cache/
 .venv/
 *.egg-info/
-mlx_CLXV-2.2/
