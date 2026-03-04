@@ -20,17 +20,27 @@ class GameState(TypedDict):
 
 
 def display_maze(maze: MazeGenerator) -> None:
-    cell_size: int = 20  # Pixels
-    ui_width: int = 250  # UI
-    maze_width_px: int = maze.config.width * cell_size
-    win_width: int = maze_width_px + ui_width
-    win_height: int = maze.config.height * cell_size
 
     mlx_app = mlx.Mlx()
     mlx_ptr = mlx_app.mlx_init()
     if not mlx_ptr:
         sys.stderr.write("Error: Failed to initialize MLX.\n")
         return
+
+    _, screen_width, screen_height = mlx_app.mlx_get_screen_size(mlx_ptr)
+
+    ui_width: int = 250  # UI
+
+    max_cell_width: int = (screen_width - ui_width) // maze.config.width
+    max_cell_height: int = screen_height // maze.config.height
+    cell_size: int = max(1, min(20, max_cell_width, max_cell_height))  # Pixels
+
+    maze_width_px: int = maze.config.width * cell_size
+    win_width: int = maze_width_px + ui_width
+    win_height: int = maze.config.height * cell_size
+
+    win_width = min(win_width, screen_width)
+    win_height = min(win_height, screen_height)
 
     win_ptr = mlx_app.mlx_new_window(
         mlx_ptr, win_width, win_height, "A-Maze-ing"
@@ -58,15 +68,15 @@ def display_maze(maze: MazeGenerator) -> None:
     }
 
     def draw_h_line(x: int, y: int, length: int, color: int) -> None:
-        if not (0 <= y < win_height) or x >= win_width:
+        if not (0 <= y < win_height) or x >= maze_width_px:
             return
 
         # Truncate if line exceeds window bounds.
         if x < 0:
             length += x
             x = 0
-        if x + length > win_width:
-            length = win_width - x
+        if x + length > maze_width_px:
+            length = maze_width_px - x
         if length <= 0:
             return
 
@@ -86,7 +96,7 @@ def display_maze(maze: MazeGenerator) -> None:
         img_data[start_idx:end_idx] = row_bytes
 
     def draw_v_line(x: int, y: int, length: int, color: int) -> None:
-        if not (0 <= x < win_width) or y >= win_height:
+        if not (0 <= x < maze_width_px) or y >= win_height:
             return
 
         if y < 0:
@@ -189,8 +199,11 @@ def display_maze(maze: MazeGenerator) -> None:
             for px, py in path_animate:
                 if (py, px) not in (maze.config.entry, maze.config.exit):
                     draw_rect(
-                        px * cell_size + 6, py * cell_size + 6,
-                        cell_size - 12, cell_size - 12, param["path_color"]
+                        px * cell_size + 2,
+                        py * cell_size + 2,
+                        max(1, cell_size - 4),
+                        max(1, cell_size - 4),
+                        param["path_color"]
                     )
 
     def draw_ui() -> None:
@@ -208,6 +221,10 @@ def display_maze(maze: MazeGenerator) -> None:
                                ui_x, 150, text_color, "C      : Change colors")
         mlx_app.mlx_string_put(mlx_ptr, win_ptr,
                                ui_x, 175, text_color, "Q/Esc  : Quit")
+
+    def expose_hook(param: GameState) -> int:
+        param["drawn"] = False  # Demande de redessiner l'UI
+        return 0
 
     def key_hook(keycode: int, param: GameState) -> int:
         if keycode in (53, 65307, 113):  # Esc or 'q'
@@ -233,20 +250,23 @@ def display_maze(maze: MazeGenerator) -> None:
 
     def render_loop_hook(param: GameState) -> int:
         param["frame_count"] += 1
+
         draw_static()
         draw_dynamic(param)
 
+        mlx_app.mlx_put_image_to_window(mlx_ptr, win_ptr, img_ptr, 0, 0)
+
         if not param["drawn"]:
             mlx_app.mlx_clear_window(mlx_ptr, win_ptr)
+            mlx_app.mlx_put_image_to_window(mlx_ptr, win_ptr, img_ptr, 0, 0)
             draw_ui()
             param["drawn"] = True
 
-        # Push the complete image to the window.
-        mlx_app.mlx_put_image_to_window(mlx_ptr, win_ptr, img_ptr, 0, 0)
         return 0
 
     # Register hooks with the state parameter.
     mlx_app.mlx_key_hook(win_ptr, key_hook, state)
+    mlx_app.mlx_expose_hook(win_ptr, expose_hook, state)
     mlx_app.mlx_loop_hook(mlx_ptr, render_loop_hook, state)
 
     # Start the main event loop.
