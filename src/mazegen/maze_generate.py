@@ -277,7 +277,7 @@ class MazeGenerator:
         return None
 
     def make_imperfect(self) -> None:
-        chance: float = 0.90
+        chance: float = 0.42
         for current_row in range(self.config.height - 1):
             for current_col in range(self.config.width - 1):
                 if (current_row, current_col) in self.pattern_centered_coords:
