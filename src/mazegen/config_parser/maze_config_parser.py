@@ -1,3 +1,5 @@
+"""Parser that reads a key=value configuration file into a MazeConfig."""
+
 from pydantic import ValidationError
 from .maze_config import MazeConfig
 from .maze_config_parser_error import (
@@ -12,8 +14,30 @@ from .maze_config_parser_error import (
 
 
 class MazeConfigParser:
+    """Reads and validates a maze configuration file.
+
+    Provides static/class methods to parse a ``key=value`` text file and
+    produce a validated ``MazeConfig`` instance.
+    """
+
     @staticmethod
     def read_config_file(filename: str) -> dict[str, str]:
+        """Read a configuration file and return its contents as a dict.
+
+        Parses each non-empty, non-comment line as a ``key=value`` pair.
+        Keys are normalised to lowercase.
+
+        Args:
+            filename: Path to the configuration file.
+
+        Returns:
+            A dictionary mapping lowercase keys to their string values.
+
+        Raises:
+            MazeConfigParserValueError: If a line contains more than one
+                ``=`` separator.
+            MazeConfigParserFileError: If the file cannot be opened or read.
+        """
         try:
             raw_config: dict[str, str] = {}
             with open(filename, "r") as file:
@@ -38,6 +62,21 @@ class MazeConfigParser:
 
     @classmethod
     def load_config(cls, filename: str) -> MazeConfig:
+        """Load and validate a maze configuration from a file.
+
+        Reads raw key/value pairs via ``read_config_file`` and passes
+        them through Pydantic validation to produce a ``MazeConfig``.
+
+        Args:
+            filename: Path to the configuration file.
+
+        Returns:
+            A fully validated ``MazeConfig`` instance.
+
+        Raises:
+            MazeConfigParserError: On file I/O or parsing errors.
+            pydantic.ValidationError: If the parsed values fail validation.
+        """
         raw_config: dict[str, str] = cls.read_config_file(filename)
         return MazeConfig.model_validate(raw_config)
 
