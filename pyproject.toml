@@ -12,30 +12,48 @@ authors = [
     {name = "aluslu", email = "aluslu@student.42lyon.fr"},
     {name = "advacher", email ="advacher@student.42lyon.fr"}
 ]
+# when make build, it install only 
+# what module is in here 
+# (what the module needs only)
 dependencies = [
-    "mlx",
     "pydantic>=2.12.5",
 ]
 
 [dependency-groups]
+# when make install it install EVERYTHING
 dev = [
     "mypy==1.19.1",
-    "flake8"
+    "flake8",
+    "mlx"
 ]
 
 
 [tool.setuptools]
-packages = ["mazegen"]
+# Where to find package
 package-dir = {"" = "src"}
+# Mandatory to allows non .py files 
+# (ex: README.md in src/mazegen/)
+
+
+[tool.setuptools.packages.find]
+where = ["src"]
+# include mazegen package and its sub-packages
+include = ["mazegen*"]
+# adds as packages and subpackages only 
+# folders with '__init__.py' file
+namespaces = false
 
 
 [tool.mypy]
+# mypy flags
 warn_return_any = true
 warn_unused_ignores = true
 ignore_missing_imports = true
 disallow_untyped_defs = true
 check_untyped_defs = true
+# exclude these folders when executing mypy
 exclude = ["\\.venv", "venv", "build", "dist"]
 
 [tool.uv.sources]
+# where to find mlx package
 mlx = { path = "./lib/mlx-2.2-py3-none-any.whl" }

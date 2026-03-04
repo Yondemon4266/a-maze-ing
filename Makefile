@@ -8,7 +8,6 @@ all: install
 install: .venv/uv.lock
 .venv/uv.lock: pyproject.toml lib/mlx-2.2-py3-none-any.whl
 	@echo "Installing dependencies using uv..."
-	uv lock --check || uv lock
 	uv sync
 	@touch .venv/uv.lock
 

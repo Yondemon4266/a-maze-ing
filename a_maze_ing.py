@@ -4,7 +4,7 @@ from mazegen.maze_generate import MazeGenerator
 from mazegen.config_parser.maze_config_parser_error import (
     MazeConfigParserError,
 )
-from mazegen.display.maze_display import display_maze
+from display.maze_display import display_maze
 from pydantic import ValidationError
 
 

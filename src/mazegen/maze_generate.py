@@ -3,10 +3,6 @@ from typing import Optional
 from .config_parser.maze_config import MazeConfig
 from .config_parser.maze_config_parser import MazeConfigParser
 
-# print(f"Attempting to load configuration from: {config_file}")
-# config: MazeConfig = MazeConfigParser.load_config(config_file)
-# print(config)
-
 
 class MazeGenerator:
     NORTH = 1  # 0001
@@ -281,7 +277,7 @@ class MazeGenerator:
         return None
 
     def make_imperfect(self) -> None:
-        chance: float = 0.42
+        chance: float = 0.90
         for current_row in range(self.config.height - 1):
             for current_col in range(self.config.width - 1):
                 if (current_row, current_col) in self.pattern_centered_coords:
