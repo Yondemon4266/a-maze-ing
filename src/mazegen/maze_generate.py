@@ -3,10 +3,6 @@ from typing import Optional
 from .config_parser.maze_config import MazeConfig
 from .config_parser.maze_config_parser import MazeConfigParser
 
-# print(f"Attempting to load configuration from: {config_file}")
-# config: MazeConfig = MazeConfigParser.load_config(config_file)
-# print(config)
-
 
 class MazeGenerator:
     NORTH = 1  # 0001

@@ -115,25 +115,23 @@ name = "mazegen"
 version = "1.0.0"
 source = { editable = "." }
 dependencies = [
-    { name = "mlx" },
     { name = "pydantic" },
 ]
 
 [package.dev-dependencies]
 dev = [
     { name = "flake8" },
+    { name = "mlx" },
     { name = "mypy" },
 ]
 
 [package.metadata]
-requires-dist = [
-    { name = "mlx", path = "lib/mlx-2.2-py3-none-any.whl" },
-    { name = "pydantic", specifier = ">=2.12.5" },
-]
+requires-dist = [{ name = "pydantic", specifier = ">=2.12.5" }]
 
 [package.metadata.requires-dev]
 dev = [
     { name = "flake8" },
+    { name = "mlx", path = "lib/mlx-2.2-py3-none-any.whl" },
     { name = "mypy", specifier = "==1.19.1" },
 ]
 
