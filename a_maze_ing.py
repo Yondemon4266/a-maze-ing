@@ -1,10 +1,7 @@
 import sys
 
-from mazegen.maze_generate import MazeGenerator
-from mazegen.config_parser.maze_config_parser_error import (
-    MazeConfigParserError,
-)
-from display.maze_display import display_maze
+from mazegen import MazeGenerator, MazeConfigParserError
+from maze_display import display_maze
 from pydantic import ValidationError
 
 
