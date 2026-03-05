@@ -22,8 +22,8 @@ class MazeConfig(BaseModel):
         algorithm: Generation algorithm name (default ``"DFS"``).
     """
 
-    width: int = Field(ge=2)
-    height: int = Field(ge=2)
+    width: int = Field(ge=2, le=100)
+    height: int = Field(ge=2, le=100)
 
     entry: tuple[int, int] = Field(...)
     exit: tuple[int, int] = Field(...)

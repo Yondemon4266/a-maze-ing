@@ -276,16 +276,16 @@ def display_maze(maze: MazeGenerator) -> None:
             for px, py in path_animate:
                 if (py, px) not in (maze.config.entry, maze.config.exit):
                     draw_rect(
-                        px * cell_size + 2,
-                        py * cell_size + 2,
-                        max(1, cell_size - 4),
-                        max(1, cell_size - 4),
+                        px * cell_size + 4,
+                        py * cell_size + 4,
+                        max(1, cell_size - 8),
+                        max(1, cell_size - 8),
                         param["path_color"],
                     )
 
     def draw_ui() -> None:
         """Draw the side-panel UI text listing keyboard shortcuts."""
-        ui_x = (maze.config.width * cell_size) + 20
+        ui_x = (maze.config.width * cell_size) + 10
         text_color = 0xFFFFFF
         mlx_app.mlx_string_put(
             mlx_ptr, win_ptr, ui_x, 40, text_color, "    === MENU ==="

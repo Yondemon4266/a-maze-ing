@@ -38,13 +38,14 @@ Lines starting with # are treated as comments and are ignored.
 
 **Mandatory Keys**  
 
-WIDTH	Horizontal size of the maze	Integer ≥2  
-HEIGHT	Vertical size of the maze	Integer ≥2  
+WIDTH	Horizontal size of the maze	Integer ≥2 & ≤100
+HEIGHT	Vertical size of the maze	Integer ≥2 & ≤100
 ENTRY	Starting point coordinates	Must be different from EXIT  
 EXIT	Ending point coordinates	Must be different from ENTRY  
 OUTPUT_FILE	Path to save the result	Must be in the format *.txt  
 
     Note on the '42' Pattern: If your maze dimensions are ≥9 in width and ≥7 in height, a special '42' pattern is automatically generated. You must ensure that your ENTRY and EXIT points do not overlap with the points making up this pattern.
+    WIDTH and HEIGHT can be modify into the file maze_config.py . ge=2, le=100
 
 Optional Keys
 
