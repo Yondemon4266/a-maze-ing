@@ -12,9 +12,8 @@ authors = [
     {name = "aluslu", email = "aluslu@student.42lyon.fr"},
     {name = "advacher", email ="advacher@student.42lyon.fr"}
 ]
-# when make build, it install only 
-# what module is in here 
-# (what the module needs only)
+# when make build, it install 
+# what the module needs only 
 dependencies = [
     "pydantic>=2.12.5",
 ]
@@ -27,13 +26,12 @@ dev = [
     "mlx"
 ]
 
-
 [tool.setuptools]
 # Where to find package
 package-dir = {"" = "src"}
-# Mandatory to allows non .py files 
-# (ex: README.md in src/mazegen/)
 
+[tool.setuptools.package-data]
+"mazegen" = ["README.md", "py.typed"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
