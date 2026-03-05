@@ -1,3 +1,5 @@
+"""Interactive MLX-based graphical display for the generated maze."""
+
 import sys
 import mlx
 from typing import TypedDict
@@ -5,6 +7,26 @@ from mazegen.maze_generate import MazeGenerator
 
 
 class GameState(TypedDict):
+    """Mutable state dictionary passed to MLX hook callbacks.
+
+    Attributes:
+        show_path: Whether the solution path is visible.
+        color_theme_idx: Index into ``wall_colors`` for the active
+            wall colour.
+        wall_colors: Available wall colour choices (ARGB integers).
+        bg_color: Background colour (ARGB).
+        path_color: Solution-path colour (ARGB).
+        entry_color: Entry-cell highlight colour (ARGB).
+        exit_color: Exit-cell highlight colour (ARGB).
+        pattern_colors: Colours cycled for the "42" pattern twinkle
+            animation.
+        drawn: Whether the static UI text has been drawn since the
+            last state change.
+        frame_count: Running frame counter used for animation timing.
+        path_progress: Number of path segments currently animated.
+        solution: Direction string for the solved path, or ``None``.
+    """
+
     show_path: bool
     color_theme_idx: int
     wall_colors: list[int]
@@ -20,6 +42,16 @@ class GameState(TypedDict):
 
 
 def display_maze(maze: MazeGenerator) -> None:
+    """Open an MLX window and render the maze interactively.
+
+    Creates a window sized to the maze, registers keyboard and
+    render-loop hooks, and enters the MLX event loop.  The user can
+    toggle the solution path, cycle wall colours, regenerate the maze,
+    or quit via keyboard shortcuts displayed in a side UI panel.
+
+    Args:
+        maze: A fully generated and solved ``MazeGenerator`` instance.
+    """
 
     mlx_app = mlx.Mlx()
     mlx_ptr = mlx_app.mlx_init()
@@ -68,6 +100,14 @@ def display_maze(maze: MazeGenerator) -> None:
     }
 
     def draw_h_line(x: int, y: int, length: int, color: int) -> None:
+        """Draw a horizontal line into the image buffer.
+
+        Args:
+            x: Starting x pixel coordinate.
+            y: Y pixel coordinate (row).
+            length: Number of pixels to draw.
+            color: ARGB colour integer.
+        """
         if not (0 <= y < win_height) or x >= maze_width_px:
             return
 
@@ -96,6 +136,14 @@ def display_maze(maze: MazeGenerator) -> None:
         img_data[start_idx:end_idx] = row_bytes
 
     def draw_v_line(x: int, y: int, length: int, color: int) -> None:
+        """Draw a vertical line into the image buffer.
+
+        Args:
+            x: X pixel coordinate (column).
+            y: Starting y pixel coordinate.
+            length: Number of pixels to draw.
+            color: ARGB colour integer.
+        """
         if not (0 <= x < maze_width_px) or y >= win_height:
             return
 
@@ -124,10 +172,24 @@ def display_maze(maze: MazeGenerator) -> None:
             idx += size_line
 
     def draw_rect(x: int, y: int, width: int, height: int, color: int) -> None:
+        """Draw a filled rectangle into the image buffer.
+
+        Args:
+            x: Top-left x pixel coordinate.
+            y: Top-left y pixel coordinate.
+            width: Rectangle width in pixels.
+            height: Rectangle height in pixels.
+            color: ARGB colour integer.
+        """
         for i in range(height):
             draw_h_line(x, y + i, width, color)
 
     def draw_static() -> None:
+        """Render static maze elements.
+
+        Draws the background, cell walls, entry marker, and exit
+        marker into the image buffer.
+        """
         draw_rect(0, 0, maze_width_px, win_height, state["bg_color"])
 
         current_wall_color = state["wall_colors"][state["color_theme_idx"]]
@@ -171,6 +233,11 @@ def display_maze(maze: MazeGenerator) -> None:
         )
 
     def draw_dynamic(param: GameState) -> None:
+        """Render animated elements: "42" pattern twinkle and path.
+
+        Args:
+            param: Current game state dictionary.
+        """
         # Animate Pattern
         if maze.can_fit_pattern():
             twinkle_idx = (param["frame_count"] // 8) % len(
@@ -217,6 +284,7 @@ def display_maze(maze: MazeGenerator) -> None:
                     )
 
     def draw_ui() -> None:
+        """Draw the side-panel UI text listing keyboard shortcuts."""
         ui_x = (maze.config.width * cell_size) + 20
         text_color = 0xFFFFFF
         mlx_app.mlx_string_put(
@@ -239,10 +307,33 @@ def display_maze(maze: MazeGenerator) -> None:
         )
 
     def expose_hook(param: GameState) -> int:
+        """Handle window expose events by requesting a redraw.
+
+        Args:
+            param: Current game state dictionary.
+
+        Returns:
+            ``0`` (required by MLX hook signature).
+        """
         param["drawn"] = False  # Demande de redessiner l'UI
         return 0
 
     def key_hook(keycode: int, param: GameState) -> int:
+        """Handle keyboard input for maze interactions.
+
+        Supported keys:
+            - **Esc / Q**: Quit the application.
+            - **Space**: Regenerate and re-solve the maze.
+            - **P**: Toggle solution-path visibility.
+            - **C**: Cycle wall colour theme.
+
+        Args:
+            keycode: Platform-specific key code.
+            param: Current game state dictionary.
+
+        Returns:
+            ``0`` (required by MLX hook signature).
+        """
         if keycode in (53, 65307, 113):  # Esc or 'q'
             mlx_app.mlx_loop_exit(mlx_ptr)
 
@@ -266,6 +357,19 @@ def display_maze(maze: MazeGenerator) -> None:
         return 0
 
     def render_loop_hook(param: GameState) -> int:
+        """Main render-loop callback invoked every frame by MLX.
+
+        Increments the frame counter, redraws static and dynamic
+        layers, and composites the image to the window.  When the
+        state is dirty (``drawn is False``), also redraws the UI
+        text overlay.
+
+        Args:
+            param: Current game state dictionary.
+
+        Returns:
+            ``0`` (required by MLX hook signature).
+        """
         param["frame_count"] += 1
 
         draw_static()
