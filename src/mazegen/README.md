@@ -2,7 +2,7 @@
 
 # 🧩 Maze Generator Module
 
-This standalone module provides a robust `MazeGenerator` class capable of creating and solving mazes (perfect or non-perfect) using different algorithms. It is designed to be easily imported into any future Python project.
+This standalone module provides `MazeGenerator` class capable of creating and solving mazes (perfect or non-perfect) using different algorithms. It is designed to be easily imported into any future Python project.
 
 ---
 
@@ -30,19 +30,19 @@ Once generated and solved, you can use any visual library of your choice to visu
 
 ## 2. Passing Custom Parameters
 
-Custom parameters (such as size, seed, entry, and exit points) are passed to the generator via a configuration file provided during instantiation.
+Custom parameters (such as size, seed, entry, and exit points) are passed to the generator via a config_parser.
 
-The configuration file must contain one KEY=VALUE pair per line. 
+You have to creat a config.txt file with one KEY=VALUE pair per line. 
 
 Lines starting with # are treated as comments and are ignored.
 
-Mandatory Keys
-Key	Description	Constraints
-WIDTH	Horizontal size of the maze	Integer ≥2
-HEIGHT	Vertical size of the maze	Integer ≥2
-ENTRY	Starting point coordinates	Must be different from EXIT
-EXIT	Ending point coordinates	Must be different from ENTRY
-OUTPUT_FILE	Path to save the result	Must be in the format *.txt
+**Mandatory Keys**  
+
+WIDTH	Horizontal size of the maze	Integer ≥2  
+HEIGHT	Vertical size of the maze	Integer ≥2  
+ENTRY	Starting point coordinates	Must be different from EXIT  
+EXIT	Ending point coordinates	Must be different from ENTRY  
+OUTPUT_FILE	Path to save the result	Must be in the format *.txt  
 
     Note on the '42' Pattern: If your maze dimensions are ≥9 in width and ≥7 in height, a special '42' pattern is automatically generated. You must ensure that your ENTRY and EXIT points do not overlap with the points making up this pattern.
 
@@ -52,9 +52,9 @@ Optional Keys
 
     ALGORITHM: Defines the generation logic.
 
-        DFS (Default): Generates long, winding corridors, resulting in a longer path to the exit.
+        DFS (Default): Generates long corridors, resulting in a longer path to the exit.
 
-        PRIM: Generates many smaller, branchy corridors, resulting in a shorter path to the exit.
+        PRIM: Generates many smaller corridors, resulting in a shorter path to the exit.
 
 
 ## 3. Accessing the Generated Structure
@@ -62,7 +62,7 @@ Optional Keys
 Once the MazeGenerator is instantiated, the actual maze structure is accessible via the maze_grid attribute.
 ```python
 
-structure: list[list[int]] = maze.maze_grid
+grid: list[list[int]] = maze.maze_grid
 ```
 
 The grid contains integers ranging from 0 to 15. These integers represent the walls of each cell using a bitmask system. Each number represents the sum of the directions that have a wall:
@@ -76,13 +76,14 @@ Value	Direction	Bit Representation
 
 [8]	WEST	1000
 
-Example: * If a cell has a value of 15, it has 4 walls.
+Example: 
+
+    If a cell has a value of 15, it has 4 walls.
 
     If a cell has a value of 8, it has exactly 1 wall located to the West.
 
     If a cell has a value of 9 (8+1), it has walls on the West and North sides.
 
-Wall Encoding Table:
 ## 4. Accessing the Solution
 
 To retrieve the path from the ENTRY to the EXIT, use the solve() method on your instantiated object. It requires no parameters, as it uses the data already parsed from your configuration file.
@@ -91,7 +92,6 @@ To retrieve the path from the ENTRY to the EXIT, use the solve() method on your 
 solved_path: str | None = maze.solve()
 ```
 
-Return Format
 
 The method returns a string path if found (None if not found) of cardinal directions representing the exact path to the exit:
 
