@@ -1,15 +1,15 @@
 
 # Maze width (number of cells)
-WIDTH=10
+WIDTH=50
 
 # Maze height
-HEIGHT=10
+HEIGHT=50
 
 # Entry coordinates (x,y)
-ENTRY=4,3
+ENTRY=1,3
 
 # Exit coordinates (x,y) 
-EXIT=0,1
+EXIT=0,49
 
 # Output filename
 OUTPUT_FILE=output_maze.txt
@@ -18,5 +18,3 @@ OUTPUT_FILE=output_maze.txt
 PERFECT=TRUE
 
 ALGORITHM=DFS
-
-seed=dnwj
