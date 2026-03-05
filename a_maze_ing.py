@@ -11,7 +11,7 @@ output, and launches an interactive MLX graphical display.
 import sys
 
 from mazegen import MazeGenerator, MazeConfigParserError
-from maze_display import display_maze
+from maze_display_2 import display_2
 from pydantic import ValidationError
 
 
@@ -83,7 +83,7 @@ def main() -> None:
         maze: MazeGenerator = MazeGenerator(config_file_name)
         maze.solve()
         write_output_file(maze)
-        display_maze(maze)
+        display_2(maze)
 
     except MazeConfigParserError as err:
         sys.stderr.write(f"{err.__class__.__name__, err}")

@@ -74,14 +74,21 @@ def display_maze(maze: MazeGenerator) -> None:
     win_width = min(win_width, screen_width)
     win_height = min(win_height, screen_height)
 
+    # Recalculer la largeur réelle du labyrinthe après troncature
+    maze_width_px = win_width - ui_width
+
     win_ptr = mlx_app.mlx_new_window(
         mlx_ptr, win_width, win_height, "A-Maze-ing"
     )
 
-    # Memory image creation for fast rendering.
+    # L'image ne couvre que la zone du labyrinthe (pas le panneau UI)
     img_ptr = mlx_app.mlx_new_image(mlx_ptr, maze_width_px, win_height)
     img_data, bpp, size_line, endian = mlx_app.mlx_get_data_addr(img_ptr)
     bytes_per_pixel = bpp // 8
+    img_width = maze_width_px
+
+    # Image noire pour effacer la zone UI
+    ui_bg_ptr = mlx_app.mlx_new_image(mlx_ptr, ui_width, win_height)
 
     # State Management for Interactions
     state: GameState = {
@@ -100,23 +107,16 @@ def display_maze(maze: MazeGenerator) -> None:
     }
 
     def draw_h_line(x: int, y: int, length: int, color: int) -> None:
-        """Draw a horizontal line into the image buffer.
-
-        Args:
-            x: Starting x pixel coordinate.
-            y: Y pixel coordinate (row).
-            length: Number of pixels to draw.
-            color: ARGB colour integer.
-        """
-        if not (0 <= y < win_height) or x >= maze_width_px:
+        """Draw a horizontal line into the image buffer."""
+        if not (0 <= y < win_height) or x >= img_width:
             return
 
         # Truncate if line exceeds window bounds.
         if x < 0:
             length += x
             x = 0
-        if x + length > maze_width_px:
-            length = maze_width_px - x
+        if x + length > img_width:
+            length = img_width - x
         if length <= 0:
             return
 
@@ -136,15 +136,8 @@ def display_maze(maze: MazeGenerator) -> None:
         img_data[start_idx:end_idx] = row_bytes
 
     def draw_v_line(x: int, y: int, length: int, color: int) -> None:
-        """Draw a vertical line into the image buffer.
-
-        Args:
-            x: X pixel coordinate (column).
-            y: Starting y pixel coordinate.
-            length: Number of pixels to draw.
-            color: ARGB colour integer.
-        """
-        if not (0 <= x < maze_width_px) or y >= win_height:
+        """Draw a vertical line into the image buffer."""
+        if not (0 <= x < img_width) or y >= win_height:
             return
 
         if y < 0:
@@ -172,25 +165,14 @@ def display_maze(maze: MazeGenerator) -> None:
             idx += size_line
 
     def draw_rect(x: int, y: int, width: int, height: int, color: int) -> None:
-        """Draw a filled rectangle into the image buffer.
-
-        Args:
-            x: Top-left x pixel coordinate.
-            y: Top-left y pixel coordinate.
-            width: Rectangle width in pixels.
-            height: Rectangle height in pixels.
-            color: ARGB colour integer.
-        """
+        """Draw a filled rectangle into the image buffer."""
         for i in range(height):
             draw_h_line(x, y + i, width, color)
 
     def draw_static() -> None:
-        """Render static maze elements.
-
-        Draws the background, cell walls, entry marker, and exit
-        marker into the image buffer.
-        """
-        draw_rect(0, 0, maze_width_px, win_height, state["bg_color"])
+        """Render static maze elements."""
+        # On nettoie la surface de l'image (labyrinthe uniquement)
+        draw_rect(0, 0, img_width, win_height, state["bg_color"])
 
         current_wall_color = state["wall_colors"][state["color_theme_idx"]]
 
@@ -233,34 +215,39 @@ def display_maze(maze: MazeGenerator) -> None:
         )
 
     def draw_dynamic(param: GameState) -> None:
-        """Render animated elements: "42" pattern twinkle and path.
-
-        Args:
-            param: Current game state dictionary.
-        """
-        # Animate Pattern
+        """Render animated elements: "42" pattern twinkle and path."""
+        # --- "42" pattern twinkle ---
         if maze.can_fit_pattern():
             twinkle_idx = (param["frame_count"] // 8) % len(
                 param["pattern_colors"]
             )
             current_pattern_color = param["pattern_colors"][twinkle_idx]
-
             for row in range(maze.config.height):
                 for col in range(maze.config.width):
                     if maze.maze_grid[row][col] == 15:
                         px = col * cell_size
                         py = row * cell_size
                         draw_rect(
-                            px, py, cell_size, cell_size, current_pattern_color
+                            px,
+                            py,
+                            cell_size,
+                            cell_size,
+                            current_pattern_color,
                         )
 
+        # --- Solution path animation ---
         solution_path: str | None = param["solution"]
         if param["show_path"] and solution_path:
             path_coords = []
             curr_y, curr_x = maze.config.entry
 
             if isinstance(solution_path, str):
-                moves = {"N": (-1, 0), "S": (1, 0), "E": (0, 1), "W": (0, -1)}
+                moves = {
+                    "N": (-1, 0),
+                    "S": (1, 0),
+                    "E": (0, 1),
+                    "W": (0, -1),
+                }
                 for move in solution_path:
                     dy, dx = moves[move]
                     curr_y += dy
@@ -283,9 +270,18 @@ def display_maze(maze: MazeGenerator) -> None:
                         param["path_color"],
                     )
 
-    def draw_ui() -> None:
-        """Draw the side-panel UI text listing keyboard shortcuts."""
-        ui_x = (maze.config.width * cell_size) + 10
+    def draw_ui(param: GameState) -> None:
+        """Draw the side-panel UI text listing keyboard shortcuts.
+
+        Clears the UI area with a black image, then redraws text.
+        Because the maze image only covers [0, maze_width_px),
+        this text is never overwritten by mlx_put_image_to_window.
+        """
+        # Efface la zone UI avec l'image noire
+        mlx_app.mlx_put_image_to_window(
+            mlx_ptr, win_ptr, ui_bg_ptr, maze_width_px, 0
+        )
+        ui_x = maze_width_px + 10
         text_color = 0xFFFFFF
         mlx_app.mlx_string_put(
             mlx_ptr, win_ptr, ui_x, 40, text_color, "    === MENU ==="
@@ -307,33 +303,12 @@ def display_maze(maze: MazeGenerator) -> None:
         )
 
     def expose_hook(param: GameState) -> int:
-        """Handle window expose events by requesting a redraw.
-
-        Args:
-            param: Current game state dictionary.
-
-        Returns:
-            ``0`` (required by MLX hook signature).
-        """
-        param["drawn"] = False  # Demande de redessiner l'UI
+        """Handle window expose events by requesting a redraw."""
+        param["drawn"] = False
         return 0
 
     def key_hook(keycode: int, param: GameState) -> int:
-        """Handle keyboard input for maze interactions.
-
-        Supported keys:
-            - **Esc / Q**: Quit the application.
-            - **Space**: Regenerate and re-solve the maze.
-            - **P**: Toggle solution-path visibility.
-            - **C**: Cycle wall colour theme.
-
-        Args:
-            keycode: Platform-specific key code.
-            param: Current game state dictionary.
-
-        Returns:
-            ``0`` (required by MLX hook signature).
-        """
+        """Handle keyboard input for maze interactions."""
         if keycode in (53, 65307, 113):  # Esc or 'q'
             mlx_app.mlx_loop_exit(mlx_ptr)
 
@@ -357,31 +332,19 @@ def display_maze(maze: MazeGenerator) -> None:
         return 0
 
     def render_loop_hook(param: GameState) -> int:
-        """Main render-loop callback invoked every frame by MLX.
-
-        Increments the frame counter, redraws static and dynamic
-        layers, and composites the image to the window.  When the
-        state is dirty (``drawn is False``), also redraws the UI
-        text overlay.
-
-        Args:
-            param: Current game state dictionary.
-
-        Returns:
-            ``0`` (required by MLX hook signature).
-        """
+        """Main render-loop callback invoked every frame by MLX."""
         param["frame_count"] += 1
 
-        draw_static()
+        if not param["drawn"]:
+            draw_static()
+            draw_ui(param)
+            param["drawn"] = True
+
         draw_dynamic(param)
 
+        # L'image ne couvre que le labyrinthe → le texte UI n'est
+        # jamais écrasé, donc pas de clignotement.
         mlx_app.mlx_put_image_to_window(mlx_ptr, win_ptr, img_ptr, 0, 0)
-
-        if not param["drawn"]:
-            mlx_app.mlx_clear_window(mlx_ptr, win_ptr)
-            mlx_app.mlx_put_image_to_window(mlx_ptr, win_ptr, img_ptr, 0, 0)
-            draw_ui()
-            param["drawn"] = True
 
         return 0
 
