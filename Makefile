@@ -1,17 +1,16 @@
 PYTHON = uv run python3 
 MAIN = a_maze_ing.py
 CONFIG = config.txt
-SRC = $(MAIN) mazegen/
-
-all: install
+SRC = .
 
 install: .venv/uv.lock
-.venv/uv.lock: pyproject.toml
+.venv/uv.lock: pyproject.toml lib/mlx-2.2-py3-none-any.whl
 	@echo "Installing dependencies using uv..."
 	uv sync
 	@touch .venv/uv.lock
 
 run: install
+	rm -rf 
 	@echo "Running the maze generator..."
 	$(PYTHON) $(MAIN) $(CONFIG) 
 
@@ -21,7 +20,7 @@ debug: install
 
 lint: install
 	@echo "Running standard linting..."
-	uv run flake8 $(SRC) 
+	uv run flake8 $(SRC)
 	uv run mypy $(SRC)
 
 lint-strict: install
@@ -31,20 +30,25 @@ lint-strict: install
 
 build: install
 	@echo "Building the standalone module..."
-	uv build
+	uv build --wheel
 	@echo "Moving the package to the root of the repository..."
 	mv dist/mazegen-* ./
 	rm -rf dist/
 
 clean:
 	@echo "Cleaning up..."
-	rm -rf __pycache__ \
-	rm -rf mazegen/__pycache__ \
-	.mypy_cache \
-	.venv dist/ \
-	mazegen-*.whl \
-	mazegen-*.tar.gz \
-	mazegen.egg-info* \
-	uv.lock
+	rm -rf .mypy_cache \
+	       mazegen-*.whl \
+	       mazegen-*.tar.gz \
+	       src/mazegen.egg-info* \
+	       dist/ \
+		   build \
+		   uv.lock \
 
-.PHONY: install run debug lint lint-strict build clean
+	find . -type d -name "__pycache__" -exec rm -rf {} +
+
+fclean: clean
+	rm -rf .venv
+
+
+.PHONY: install run debug lint lint-strict build clean fclean
