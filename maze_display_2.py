@@ -33,9 +33,10 @@ class DisplayMaze:
 
         self.mlx_app.mlx_hook(self.win_ptr, 33, 0, self.close_hook, self)
         self.mlx_app.mlx_key_hook(self.win_ptr, self.key_hook, self)
-        self.mlx_app.mlx_loop_hook(self.mlx_ptr, self.render_loop, self.state)
 
+        self.mlx_app.mlx_loop_hook(self.mlx_ptr, self.render_loop, self.state)
         self.mlx_app.mlx_loop(self.mlx_ptr)
+
         self.mlx_app.mlx_destroy_window(self.mlx_ptr, self.win_ptr)
 
     # ==========================================
@@ -98,15 +99,8 @@ class DisplayMaze:
     # PRIMITIVES DE DESSIN
     # ==========================================
 
-    def put_pixel(self, x: int, y: int, color: int) -> None:
-        idx = (y * self.size_line) + (x * self.bytes_per_pixel)
-        self.maze_img_data[idx] = color & 0xFF
-        self.maze_img_data[idx + 1] = (color >> 8) & 0xFF
-        self.maze_img_data[idx + 2] = (color >> 16) & 0xFF
-        self.maze_img_data[idx + 3] = (color >> 24) & 0xFF
-
-    def draw_h_line(self, x: int, y: int, length: int, color: int) -> None:
-        if length <= 0:
+    def draw_h_line(self, x: int, y: int, cell_size: int, color: int) -> None:
+        if cell_size <= 0:
             return
         b1, b2, b3, b4 = (
             color & 0xFF,
@@ -114,19 +108,23 @@ class DisplayMaze:
             (color >> 16) & 0xFF,
             (color >> 24) & 0xFF,
         )
-        row_bytes = bytes([b1, b2, b3, b4]) * length
+        row_bytes = bytes([b1, b2, b3, b4]) * cell_size
         start = y * self.size_line + x * self.bytes_per_pixel
-        self.maze_img_data[start:start + len(row_bytes)] = row_bytes
+        self.maze_img_data[start : start + len(row_bytes)] = row_bytes
 
-    def draw_v_line(self, x: int, y: int, length: int, color: int) -> None:
-        for i in range(length):
-            self.put_pixel(x, y + i, color)
+    def draw_v_line(self, x: int, y: int, cell_size: int, color: int) -> None:
+        for i in range(cell_size):
+            idx = ((y + i) * self.size_line) + (x * self.bytes_per_pixel)
+            self.maze_img_data[idx] = color & 0xFF
+            self.maze_img_data[idx + 1] = (color >> 8) & 0xFF
+            self.maze_img_data[idx + 2] = (color >> 16) & 0xFF
+            self.maze_img_data[idx + 3] = (color >> 24) & 0xFF
 
     def draw_rect(
-        self, x: int, y: int, width: int, height: int, color: int
+        self, x: int, y: int, cell_size: int, height: int, color: int
     ) -> None:
         for i in range(height):
-            self.draw_h_line(x, y + i, width, color)
+            self.draw_h_line(x, y + i, cell_size, color)
 
     def clear_image(self, color: int = 0xFF000000) -> None:
         b1, b2, b3, b4 = (
@@ -139,7 +137,7 @@ class DisplayMaze:
         row = pixel * self.maze_width_px
         for y in range(self.maze_height_px):
             start = y * self.size_line
-            self.maze_img_data[start:start + len(row)] = row
+            self.maze_img_data[start : start + len(row)] = row
 
     def restore_from_cache(self) -> None:
         if self._static_cache is not None:
