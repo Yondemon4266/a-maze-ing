@@ -1,12 +1,48 @@
 import mlx
-from typing import Any, Callable
+from typing import Any
+from enum import Enum
 from mazegen.maze_generate import MazeGenerator
+
+
+class KeyBind(Enum):
+    """Énumération des codes de touches (Mac / X11)."""
+
+    QUIT = (53, 65307, 113)  # Esc, Q
+    NEW_MAZE = (32, 49)  # Space
+    TOGGLE_PATH = (112, 35)  # P
+    THEME = (99, 8)  # C
 
 
 class DisplayMaze:
 
     def __init__(self, maze: MazeGenerator):
         self.maze: MazeGenerator = maze
+
+        # 1. Initialisation de MLX et de la fenêtre
+        self._init_mlx_and_window()
+
+        # 2. Initialisation de l'état
+        self._init_state(maze)
+
+        # 3. Calcul des dimensions et création du buffer d'image
+        self._init_dimensions_and_buffers(maze)
+
+        # 4. Configuration des hooks et lancement
+        self._static_cache: bytes | None = None
+        self._needs_rebuild = True
+
+        self.mlx_app.mlx_hook(self.win_ptr, 33, 0, self.close_hook, self)
+        self.mlx_app.mlx_key_hook(self.win_ptr, self.key_hook, self)
+        self.mlx_app.mlx_loop_hook(self.mlx_ptr, self.render_loop, self.state)
+
+        self.mlx_app.mlx_loop(self.mlx_ptr)
+        self.mlx_app.mlx_destroy_window(self.mlx_ptr, self.win_ptr)
+
+    # ==========================================
+    # INITIALISATION (Factorisation de __init__)
+    # ==========================================
+
+    def _init_mlx_and_window(self) -> None:
         self.mlx_app = mlx.Mlx()
         self.mlx_ptr = self.mlx_app.mlx_init()
         _, self.screen_width, self.screen_height = (
@@ -18,6 +54,8 @@ class DisplayMaze:
             self.screen_height,
             "Maze Display",
         )
+
+    def _init_state(self, maze: MazeGenerator) -> None:
         self.state: Any = {
             "show_path": True,
             "color_theme_idx": 0,
@@ -32,10 +70,12 @@ class DisplayMaze:
             "solution": maze.solved_path,
         }
 
+    def _init_dimensions_and_buffers(self, maze: MazeGenerator) -> None:
         self.menu_height = self.screen_height // 8
         self.cell_size = self.calculate_best_cell_size()
         self.maze_width_px = maze.config.width * self.cell_size
         self.maze_height_px = maze.config.height * self.cell_size
+
         self.maze_img_ptr = self.mlx_app.mlx_new_image(
             self.mlx_ptr, self.maze_width_px, self.maze_height_px
         )
@@ -43,16 +83,6 @@ class DisplayMaze:
             self.mlx_app.mlx_get_data_addr(self.maze_img_ptr)
         )
         self.bytes_per_pixel = self.bpp // 8
-
-        # Cache statique : snapshot du buffer après fill_maze()
-        self._static_cache: bytes | None = None
-        self._needs_rebuild = True
-
-        self.mlx_app.mlx_hook(self.win_ptr, 33, 0, self.close_hook, self)
-        self.mlx_app.mlx_key_hook(self.win_ptr, self.key_hook, self)
-        self.mlx_app.mlx_loop_hook(self.mlx_ptr, self.render_loop, self.state)
-        self.mlx_app.mlx_loop(self.mlx_ptr)
-        self.mlx_app.mlx_destroy_window(self.mlx_ptr, self.win_ptr)
 
     def calculate_best_cell_size(self) -> int:
         margin: int = 50
@@ -62,67 +92,75 @@ class DisplayMaze:
         )
         size_x: int = available_maze_width // self.maze.config.width
         size_y: int = available_maze_height // self.maze.config.height
-        cell_size: int = max(1, min(size_x, size_y))
-        return cell_size
+        return max(1, min(size_x, size_y))
+
+    # ==========================================
+    # PRIMITIVES DE DESSIN
+    # ==========================================
 
     def put_pixel(self, x: int, y: int, color: int) -> None:
-        # Index = (Y * octets_par_ligne) + (X * octets_per_pixel)
         idx = (y * self.size_line) + (x * self.bytes_per_pixel)
-
-        # Format ARGB (Little Endian : B, G, R, A)
-        self.maze_img_data[idx] = color & 0xFF  # Blue
-        self.maze_img_data[idx + 1] = (color >> 8) & 0xFF  # Green
-        self.maze_img_data[idx + 2] = (color >> 16) & 0xFF  # Red
-        self.maze_img_data[idx + 3] = (color >> 24) & 0xFF  # Alpha
+        self.maze_img_data[idx] = color & 0xFF
+        self.maze_img_data[idx + 1] = (color >> 8) & 0xFF
+        self.maze_img_data[idx + 2] = (color >> 16) & 0xFF
+        self.maze_img_data[idx + 3] = (color >> 24) & 0xFF
 
     def draw_h_line(self, x: int, y: int, length: int, color: int) -> None:
         if length <= 0:
             return
-        b1 = color & 0xFF
-        b2 = (color >> 8) & 0xFF
-        b3 = (color >> 16) & 0xFF
-        b4 = (color >> 24) & 0xFF
+        b1, b2, b3, b4 = (
+            color & 0xFF,
+            (color >> 8) & 0xFF,
+            (color >> 16) & 0xFF,
+            (color >> 24) & 0xFF,
+        )
         row_bytes = bytes([b1, b2, b3, b4]) * length
         start = y * self.size_line + x * self.bytes_per_pixel
-        self.maze_img_data[start:start + len(row_bytes)] = row_bytes
+        self.maze_img_data[start : start + len(row_bytes)] = row_bytes
 
     def draw_v_line(self, x: int, y: int, length: int, color: int) -> None:
-        """Dessine une ligne verticale."""
         for i in range(length):
             self.put_pixel(x, y + i, color)
 
     def draw_rect(
         self, x: int, y: int, width: int, height: int, color: int
     ) -> None:
-        """Draw a filled rectangle into the image buffer."""
         for i in range(height):
             self.draw_h_line(x, y + i, width, color)
 
     def clear_image(self, color: int = 0xFF000000) -> None:
-        """Efface tout le buffer image avec la couleur donnée.
-
-        Utilise un bulk write ligne par ligne via size_line
-        (comme recommandé par la doc MiniLibX pour l'alignement).
-        """
-        b1 = color & 0xFF
-        b2 = (color >> 8) & 0xFF
-        b3 = (color >> 16) & 0xFF
-        b4 = (color >> 24) & 0xFF
+        b1, b2, b3, b4 = (
+            color & 0xFF,
+            (color >> 8) & 0xFF,
+            (color >> 16) & 0xFF,
+            (color >> 24) & 0xFF,
+        )
         pixel = bytes([b1, b2, b3, b4])
         row = pixel * self.maze_width_px
         for y in range(self.maze_height_px):
             start = y * self.size_line
-            self.maze_img_data[start:start + len(row)] = row
+            self.maze_img_data[start : start + len(row)] = row
 
     def restore_from_cache(self) -> None:
-        """Restaure le buffer image depuis le cache statique."""
         if self._static_cache is not None:
             self.maze_img_data[: len(self._static_cache)] = self._static_cache
 
+    # ==========================================
+    # RENDU DU LABYRINTHE (Factorisation)
+    # ==========================================
+
     def fill_maze(self) -> None:
-        """Dessine les murs, entrée et sortie. Met à jour le cache."""
         self.clear_image(self.state["bg_color"])
         wall_color = self.state["wall_colors"][self.state["color_theme_idx"]]
+
+        self._draw_walls(wall_color)
+        self._draw_entry_exit_markers()
+
+        self._static_cache = bytes(self.maze_img_data)
+        self._needs_rebuild = False
+
+    def _draw_walls(self, wall_color: int) -> None:
+        """Parcourt la grille et dessine les murs statiques."""
         for row in range(self.maze.config.height):
             for col in range(self.maze.config.width):
                 px, py = col * self.cell_size, row * self.cell_size
@@ -132,22 +170,17 @@ class DisplayMaze:
                     self.draw_h_line(px, py, self.cell_size, wall_color)
                 if val & 2:
                     self.draw_v_line(
-                        px + self.cell_size - 1,
-                        py,
-                        self.cell_size,
-                        wall_color,
+                        px + self.cell_size - 1, py, self.cell_size, wall_color
                     )
                 if val & 4:
                     self.draw_h_line(
-                        px,
-                        py + self.cell_size - 1,
-                        self.cell_size,
-                        wall_color,
+                        px, py + self.cell_size - 1, self.cell_size, wall_color
                     )
                 if val & 8:
                     self.draw_v_line(px, py, self.cell_size, wall_color)
 
-        # Entry / Exit markers
+    def _draw_entry_exit_markers(self) -> None:
+        """Dessine les points de départ et d'arrivée."""
         entry_y, entry_x = self.maze.config.entry
         self.draw_rect(
             entry_x * self.cell_size + 2,
@@ -156,6 +189,7 @@ class DisplayMaze:
             max(1, self.cell_size - 4),
             self.state["entry_color"],
         )
+
         exit_y, exit_x = self.maze.config.exit
         self.draw_rect(
             exit_x * self.cell_size + 2,
@@ -165,25 +199,113 @@ class DisplayMaze:
             self.state["exit_color"],
         )
 
-        # Largeur totale estimée du bloc de texte (le dernier commence à 550 + sa propre longueur)
-        total_text_width = 650 
-        
-        # Centrage horizontal parfait sur l'écran
-        start_x = (self.screen_width - total_text_width) // 2
-        
-        # Calcul de la position Y (sous le labyrinthe)
-        maze_start_y = (self.screen_height - self.maze_height_px - self.menu_height) // 2
-        text_y = maze_start_y + self.maze_height_px + 50
-        
-        # Affichage des textes avec leurs décalages relatifs
-        self.mlx_app.mlx_string_put(self.mlx_ptr, self.win_ptr, start_x, text_y, 0xFFFFFF, "Space: New;")
-        self.mlx_app.mlx_string_put(self.mlx_ptr, self.win_ptr, start_x + 200, text_y, 0xFFFFFF, "P: Path Solve;")
-        self.mlx_app.mlx_string_put(self.mlx_ptr, self.win_ptr, start_x + 400, text_y, 0xFFFFFF, "C: Theme;")
-        self.mlx_app.mlx_string_put(self.mlx_ptr, self.win_ptr, start_x + 550, text_y, 0xFFFFFF, "Q,esc: Quit;")
+    # ==========================================
+    # RENDU DYNAMIQUE (Factorisation)
+    # ==========================================
 
-        # Sauvegarder le cache statique
-        self._static_cache = bytes(self.maze_img_data)
-        self._needs_rebuild = False
+    def draw_dynamic(self) -> None:
+        self._draw_twinkle_pattern()
+        self._draw_path_animation()
+
+    def _draw_twinkle_pattern(self) -> None:
+        """Gère l'affichage du motif clignotant '42'."""
+        if not self.maze.can_fit_pattern():
+            return
+
+        twinkle_idx = (self.state["frame_count"] // 8) % len(
+            self.state["pattern_colors"]
+        )
+        current_pattern_color = self.state["pattern_colors"][twinkle_idx]
+
+        for row in range(self.maze.config.height):
+            for col in range(self.maze.config.width):
+                if self.maze.maze_grid[row][col] == 15:
+                    px, py = col * self.cell_size, row * self.cell_size
+                    self.draw_rect(
+                        px,
+                        py,
+                        self.cell_size,
+                        self.cell_size,
+                        current_pattern_color,
+                    )
+
+    def _draw_path_animation(self) -> None:
+        """Gère l'affichage et l'animation du chemin de résolution."""
+        solution_path: str | None = self.state["solution"]
+        if not (self.state["show_path"] and solution_path):
+            return
+
+        path_coords = []
+        curr_y, curr_x = self.maze.config.entry
+
+        if isinstance(solution_path, str):
+            moves = {"N": (-1, 0), "S": (1, 0), "E": (0, 1), "W": (0, -1)}
+            for move in solution_path:
+                dy, dx = moves[move]
+                curr_y += dy
+                curr_x += dx
+                path_coords.append((curr_x, curr_y))
+        else:
+            path_coords = [(px, py) for (py, px) in solution_path]
+
+        self.state["path_progress"] += 1
+        limite = min(self.state["path_progress"], len(path_coords))
+        path_animate = path_coords[:limite]
+
+        for px, py in path_animate:
+            if (py, px) not in (self.maze.config.entry, self.maze.config.exit):
+                self.draw_rect(
+                    px * self.cell_size + 4,
+                    py * self.cell_size + 4,
+                    max(1, self.cell_size - 8),
+                    max(1, self.cell_size - 8),
+                    self.state["path_color"],
+                )
+
+    # ==========================================
+    # INTERFACE ET AFFICHAGE MLX
+    # ==========================================
+
+    def draw_ui(self) -> None:
+        total_text_width = 650
+        start_x = (self.screen_width - total_text_width) // 2
+        maze_start_y = (
+            self.screen_height - self.maze_height_px - self.menu_height
+        ) // 2
+        text_y = maze_start_y + self.maze_height_px + 50
+
+        self.mlx_app.mlx_string_put(
+            self.mlx_ptr,
+            self.win_ptr,
+            start_x,
+            text_y,
+            0xFFFFFF,
+            "Space: New;",
+        )
+        self.mlx_app.mlx_string_put(
+            self.mlx_ptr,
+            self.win_ptr,
+            start_x + 200,
+            text_y,
+            0xFFFFFF,
+            "P: Path Solve;",
+        )
+        self.mlx_app.mlx_string_put(
+            self.mlx_ptr,
+            self.win_ptr,
+            start_x + 400,
+            text_y,
+            0xFFFFFF,
+            "C: Theme;",
+        )
+        self.mlx_app.mlx_string_put(
+            self.mlx_ptr,
+            self.win_ptr,
+            start_x + 550,
+            text_y,
+            0xFFFFFF,
+            "Q,esc: Quit;",
+        )
 
     def put_image_in_center_window(self, width: int, height: int, img) -> None:
         start_x = (self.screen_width - width) // 2
@@ -192,25 +314,31 @@ class DisplayMaze:
             self.mlx_ptr, self.win_ptr, img, start_x, start_y
         )
 
+    # ==========================================
+    # BOUCLE ET ÉVÉNEMENTS
+    # ==========================================
+
     def key_hook(self, keycode: int, param: Any) -> int:
-        if keycode in (53, 65307, 113): # Esc,q 
+        # Utilisation de l'Enum pour les vérifications de touches
+        if keycode in KeyBind.QUIT.value:
             self.mlx_app.mlx_loop_exit(self.mlx_ptr)
 
-        elif keycode in (32, 49):  # Space
+        elif keycode in KeyBind.NEW_MAZE.value:
             self.state["path_progress"] = 0
             self.maze.regenerate()
             self.state["solution"] = self.maze.solve()
             self._needs_rebuild = True
 
-        elif keycode in (112, 35):  # 'p'
+        elif keycode in KeyBind.TOGGLE_PATH.value:
             self.state["show_path"] = not self.state["show_path"]
             self.state["path_progress"] = 0
 
-        elif keycode in (99, 8):  # 'c'
+        elif keycode in KeyBind.THEME.value:
             self.state["color_theme_idx"] = (
                 self.state["color_theme_idx"] + 1
             ) % len(self.state["wall_colors"])
             self._needs_rebuild = True
+
         return 0
 
     def close_hook(self, param: Any) -> int:
@@ -218,82 +346,19 @@ class DisplayMaze:
         return 0
 
     def render_loop(self, param: Any) -> int:
-        """Main render-loop callback invoked every frame."""
         self.state["frame_count"] += 1
 
-        # Rebuild le cache seulement si l'état a changé (lent)
         if self._needs_rebuild:
             self.fill_maze()
+            self.draw_ui()
 
-        # Restaure le buffer depuis le cache (quasi instantané)
         self.restore_from_cache()
-
-        # Éléments animés par-dessus le fond statique
         self.draw_dynamic()
 
         self.put_image_in_center_window(
             self.maze_width_px, self.maze_height_px, self.maze_img_ptr
         )
         return 0
-
-    def draw_dynamic(self) -> None:
-        """Render animated elements: "42" pattern twinkle and path."""
-        # --- "42" pattern twinkle ---
-        if self.maze.can_fit_pattern():
-            twinkle_idx = (self.state["frame_count"] // 8) % len(
-                self.state["pattern_colors"]
-            )
-            current_pattern_color = self.state["pattern_colors"][twinkle_idx]
-            for row in range(self.maze.config.height):
-                for col in range(self.maze.config.width):
-                    if self.maze.maze_grid[row][col] == 15:
-                        px = col * self.cell_size
-                        py = row * self.cell_size
-                        self.draw_rect(
-                            px,
-                            py,
-                            self.cell_size,
-                            self.cell_size,
-                            current_pattern_color,
-                        )
-
-        # --- Solution path animation ---
-        solution_path: str | None = self.state["solution"]
-        if self.state["show_path"] and solution_path:
-            path_coords = []
-            curr_y, curr_x = self.maze.config.entry
-
-            if isinstance(solution_path, str):
-                moves = {
-                    "N": (-1, 0),
-                    "S": (1, 0),
-                    "E": (0, 1),
-                    "W": (0, -1),
-                }
-                for move in solution_path:
-                    dy, dx = moves[move]
-                    curr_y += dy
-                    curr_x += dx
-                    path_coords.append((curr_x, curr_y))
-            else:
-                path_coords = [(px, py) for (py, px) in solution_path]
-
-            self.state["path_progress"] += 1
-            limite = min(self.state["path_progress"], len(path_coords))
-            path_animate = path_coords[:limite]
-
-            for px, py in path_animate:
-                if (py, px) not in (
-                    self.maze.config.entry,
-                    self.maze.config.exit,
-                ):
-                    self.draw_rect(
-                        px * self.cell_size + 4,
-                        py * self.cell_size + 4,
-                        max(1, self.cell_size - 8),
-                        max(1, self.cell_size - 8),
-                        self.state["path_color"],
-                    )
 
 
 def display_2(maze: MazeGenerator) -> None:

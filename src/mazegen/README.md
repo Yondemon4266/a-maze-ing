@@ -38,7 +38,7 @@ Lines starting with # are treated as comments and are ignored.
 
 **Mandatory Keys**  
 
-WIDTH	Horizontal size of the maze	Integer ≥2 & ≤100
+WIDTH	Horizontal size of the maze	Integer ≥2 & ≤200
 HEIGHT	Vertical size of the maze	Integer ≥2 & ≤100
 ENTRY	Starting point coordinates	Must be different from EXIT  
 EXIT	Ending point coordinates	Must be different from ENTRY  
