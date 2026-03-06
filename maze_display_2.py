@@ -116,7 +116,7 @@ class DisplayMaze:
         )
         row_bytes = bytes([b1, b2, b3, b4]) * length
         start = y * self.size_line + x * self.bytes_per_pixel
-        self.maze_img_data[start : start + len(row_bytes)] = row_bytes
+        self.maze_img_data[start:start + len(row_bytes)] = row_bytes
 
     def draw_v_line(self, x: int, y: int, length: int, color: int) -> None:
         for i in range(length):
@@ -139,7 +139,7 @@ class DisplayMaze:
         row = pixel * self.maze_width_px
         for y in range(self.maze_height_px):
             start = y * self.size_line
-            self.maze_img_data[start : start + len(row)] = row
+            self.maze_img_data[start:start + len(row)] = row
 
     def restore_from_cache(self) -> None:
         if self._static_cache is not None:
@@ -285,7 +285,7 @@ class DisplayMaze:
         self.mlx_app.mlx_string_put(
             self.mlx_ptr,
             self.win_ptr,
-            start_x + 200,
+            start_x + 185,
             text_y,
             0xFFFFFF,
             "P: Path Solve;",
@@ -307,7 +307,9 @@ class DisplayMaze:
             "Q,esc: Quit;",
         )
 
-    def put_image_in_center_window(self, width: int, height: int, img) -> None:
+    def put_image_in_center_window(
+        self, width: int, height: int, img: Any
+    ) -> None:
         start_x = (self.screen_width - width) // 2
         start_y = (self.screen_height - height - self.menu_height) // 2
         self.mlx_app.mlx_put_image_to_window(
@@ -359,7 +361,3 @@ class DisplayMaze:
             self.maze_width_px, self.maze_height_px, self.maze_img_ptr
         )
         return 0
-
-
-def display_2(maze: MazeGenerator) -> None:
-    display_maze = DisplayMaze(maze)
