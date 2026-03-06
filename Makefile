@@ -3,8 +3,6 @@ MAIN = a_maze_ing.py
 CONFIG = config.txt
 SRC = .
 
-all: install
-
 install: .venv/uv.lock
 .venv/uv.lock: pyproject.toml lib/mlx-2.2-py3-none-any.whl
 	@echo "Installing dependencies using uv..."
@@ -12,6 +10,7 @@ install: .venv/uv.lock
 	@touch .venv/uv.lock
 
 run: install
+	rm -rf 
 	@echo "Running the maze generator..."
 	$(PYTHON) $(MAIN) $(CONFIG) 
 
@@ -31,7 +30,7 @@ lint-strict: install
 
 build: install
 	@echo "Building the standalone module..."
-	uv build
+	uv build --wheel
 	@echo "Moving the package to the root of the repository..."
 	mv dist/mazegen-* ./
 	rm -rf dist/
@@ -42,7 +41,14 @@ clean:
 	       mazegen-*.whl \
 	       mazegen-*.tar.gz \
 	       src/mazegen.egg-info* \
-	       dist/
+	       dist/ \
+		   build \
+		   uv.lock \
+
 	find . -type d -name "__pycache__" -exec rm -rf {} +
 
-.PHONY: install run debug lint lint-strict build clean
+fclean: clean
+	rm -rf .venv
+
+
+.PHONY: install run debug lint lint-strict build clean fclean

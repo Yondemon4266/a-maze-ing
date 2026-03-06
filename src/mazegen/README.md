@@ -1,6 +1,6 @@
 *This project has been created as part of the 42 curriculum by advacher, aluslu.*
 
-# 🧩 Maze Generator Module
+# Maze Generator Module
 
 This standalone module provides `MazeGenerator` class capable of creating and solving mazes (perfect or non-perfect) using different algorithms. It is designed to be easily imported into any future Python project.
 

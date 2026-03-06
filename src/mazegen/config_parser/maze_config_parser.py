@@ -1,10 +1,7 @@
 """Parser that reads a key=value configuration file into a MazeConfig."""
 
-from pydantic import ValidationError
 from .maze_config import MazeConfig
-from .maze_config_parser_error import (
-    MazeConfigParserError,
-)
+
 from .maze_config_parser_error import (
     MazeConfigParserFileError,
 )
@@ -79,18 +76,3 @@ class MazeConfigParser:
         """
         raw_config: dict[str, str] = cls.read_config_file(filename)
         return MazeConfig.model_validate(raw_config)
-
-
-if __name__ == "__main__":
-    try:
-        maze_config: MazeConfig = MazeConfigParser.load_config("config.txt")
-        print(maze_config)
-    except MazeConfigParserError as err:
-        print(err.__class__.__name__, err)
-    except ValidationError as err:
-        for error in err.errors():
-            field_path = " -> ".join(map(str, error["loc"])).upper()
-            field = field_path if field_path else "validate_config"
-
-            msg: str = error.get("msg", "empty")
-            print(f"MazeConfig error, Field {field} : {msg}")

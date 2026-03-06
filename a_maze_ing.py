@@ -11,7 +11,7 @@ output, and launches an interactive MLX graphical display.
 import sys
 
 from mazegen import MazeGenerator, MazeConfigParserError
-from maze_display_2 import DisplayMaze
+from maze_display import DisplayMaze
 from pydantic import ValidationError
 
 

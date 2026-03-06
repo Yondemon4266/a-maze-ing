@@ -1,9 +1,9 @@
 
 # Maze width (number of cells)
-WIDTH=1000
+WIDTH=200
 
 # Maze height
-HEIGHT=1000
+HEIGHT=100
 
 # Entry coordinates (x,y)
 ENTRY=3,0
@@ -18,5 +18,3 @@ OUTPUT_FILE=output_maze.txt
 PERFECT=TRUE
 
 ALGORITHM=DFS
-
-SEED=42
