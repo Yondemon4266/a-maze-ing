@@ -165,15 +165,18 @@ class DisplayMaze:
             self.state["exit_color"],
         )
 
-        start_x = 0
-        text_length_px = 515
-        if self.maze_width_px > self.maze_height_px:
-            start_x = (self.screen_width - 515) // 2
-        else:
-            start_x = (self.screen_width - self.maze_width_px - 515) // 2
-        start_y = (self.screen_height - self.maze_height_px - self.menu_height) // 2
-        text_y = start_y + self.maze_height_px + 50
-        self.mlx_app.mlx_string_put(self.mlx_ptr, self.win_ptr, start_x + 35, text_y, 0xFFFFFF, "Space: New;")
+        # Largeur totale estimée du bloc de texte (le dernier commence à 550 + sa propre longueur)
+        total_text_width = 650 
+        
+        # Centrage horizontal parfait sur l'écran
+        start_x = (self.screen_width - total_text_width) // 2
+        
+        # Calcul de la position Y (sous le labyrinthe)
+        maze_start_y = (self.screen_height - self.maze_height_px - self.menu_height) // 2
+        text_y = maze_start_y + self.maze_height_px + 50
+        
+        # Affichage des textes avec leurs décalages relatifs
+        self.mlx_app.mlx_string_put(self.mlx_ptr, self.win_ptr, start_x, text_y, 0xFFFFFF, "Space: New;")
         self.mlx_app.mlx_string_put(self.mlx_ptr, self.win_ptr, start_x + 200, text_y, 0xFFFFFF, "P: Path Solve;")
         self.mlx_app.mlx_string_put(self.mlx_ptr, self.win_ptr, start_x + 400, text_y, 0xFFFFFF, "C: Theme;")
         self.mlx_app.mlx_string_put(self.mlx_ptr, self.win_ptr, start_x + 550, text_y, 0xFFFFFF, "Q,esc: Quit;")
