@@ -54,30 +54,28 @@ class DisplayMaze:
         self.mlx_app.mlx_loop(self.mlx_ptr)
         self.mlx_app.mlx_destroy_window(self.mlx_ptr, self.win_ptr)
 
-    def calculate_best_cell_size(self):
-        margin = 50
-        available_maze_width = self.screen_width - (margin * 2)
-        available_maze_height = (
+    def calculate_best_cell_size(self) -> int:
+        margin: int = 50
+        available_maze_width: int = self.screen_width - (margin * 2)
+        available_maze_height: int = (
             self.screen_height - self.menu_height - (margin * 2)
         )
-        size_x = available_maze_width // self.maze.config.width
-        size_y = available_maze_height // self.maze.config.height
-        cell_size = max(1, min(size_x, size_y))
+        size_x: int = available_maze_width // self.maze.config.width
+        size_y: int = available_maze_height // self.maze.config.height
+        cell_size: int = max(1, min(size_x, size_y))
         return cell_size
 
-    def put_pixel(self, x: int, y: int, color: int):
-        """Place un pixel aux coordonnées (x, y)."""
+    def put_pixel(self, x: int, y: int, color: int) -> None:
         # Index = (Y * octets_par_ligne) + (X * octets_per_pixel)
         idx = (y * self.size_line) + (x * self.bytes_per_pixel)
 
         # Format ARGB (Little Endian : B, G, R, A)
-        self.maze_img_data[idx] = color & 0xFF  # Bleu
-        self.maze_img_data[idx + 1] = (color >> 8) & 0xFF  # Vert
-        self.maze_img_data[idx + 2] = (color >> 16) & 0xFF  # Rouge
+        self.maze_img_data[idx] = color & 0xFF  # Blue
+        self.maze_img_data[idx + 1] = (color >> 8) & 0xFF  # Green
+        self.maze_img_data[idx + 2] = (color >> 16) & 0xFF  # Red
         self.maze_img_data[idx + 3] = (color >> 24) & 0xFF  # Alpha
 
     def draw_h_line(self, x: int, y: int, length: int, color: int) -> None:
-        """Dessine une ligne horizontale (bulk write optimisé)."""
         if length <= 0:
             return
         b1 = color & 0xFF
@@ -86,7 +84,7 @@ class DisplayMaze:
         b4 = (color >> 24) & 0xFF
         row_bytes = bytes([b1, b2, b3, b4]) * length
         start = y * self.size_line + x * self.bytes_per_pixel
-        self.maze_img_data[start : start + len(row_bytes)] = row_bytes
+        self.maze_img_data[start:start + len(row_bytes)] = row_bytes
 
     def draw_v_line(self, x: int, y: int, length: int, color: int) -> None:
         """Dessine une ligne verticale."""
@@ -114,14 +112,14 @@ class DisplayMaze:
         row = pixel * self.maze_width_px
         for y in range(self.maze_height_px):
             start = y * self.size_line
-            self.maze_img_data[start : start + len(row)] = row
+            self.maze_img_data[start:start + len(row)] = row
 
     def restore_from_cache(self) -> None:
         """Restaure le buffer image depuis le cache statique."""
         if self._static_cache is not None:
             self.maze_img_data[: len(self._static_cache)] = self._static_cache
 
-    def fill_maze(self):
+    def fill_maze(self) -> None:
         """Dessine les murs, entrée et sortie. Met à jour le cache."""
         self.clear_image(self.state["bg_color"])
         wall_color = self.state["wall_colors"][self.state["color_theme_idx"]]
@@ -167,11 +165,24 @@ class DisplayMaze:
             self.state["exit_color"],
         )
 
+        start_x = 0
+        text_length_px = 515
+        if self.maze_width_px > self.maze_height_px:
+            start_x = (self.screen_width - 515) // 2
+        else:
+            start_x = (self.screen_width - self.maze_width_px - 515) // 2
+        start_y = (self.screen_height - self.maze_height_px - self.menu_height) // 2
+        text_y = start_y + self.maze_height_px + 50
+        self.mlx_app.mlx_string_put(self.mlx_ptr, self.win_ptr, start_x + 35, text_y, 0xFFFFFF, "Space: New;")
+        self.mlx_app.mlx_string_put(self.mlx_ptr, self.win_ptr, start_x + 200, text_y, 0xFFFFFF, "P: Path Solve;")
+        self.mlx_app.mlx_string_put(self.mlx_ptr, self.win_ptr, start_x + 400, text_y, 0xFFFFFF, "C: Theme;")
+        self.mlx_app.mlx_string_put(self.mlx_ptr, self.win_ptr, start_x + 550, text_y, 0xFFFFFF, "Q,esc: Quit;")
+
         # Sauvegarder le cache statique
         self._static_cache = bytes(self.maze_img_data)
         self._needs_rebuild = False
 
-    def put_image_in_center_window(self, width: int, height: int, img):
+    def put_image_in_center_window(self, width: int, height: int, img) -> None:
         start_x = (self.screen_width - width) // 2
         start_y = (self.screen_height - height - self.menu_height) // 2
         self.mlx_app.mlx_put_image_to_window(
@@ -179,7 +190,7 @@ class DisplayMaze:
         )
 
     def key_hook(self, keycode: int, param: Any) -> int:
-        if keycode in (53, 65307, 113):
+        if keycode in (53, 65307, 113): # Esc,q 
             self.mlx_app.mlx_loop_exit(self.mlx_ptr)
 
         elif keycode in (32, 49):  # Space
@@ -282,5 +293,5 @@ class DisplayMaze:
                     )
 
 
-def display_2(maze: MazeGenerator):
+def display_2(maze: MazeGenerator) -> None:
     display_maze = DisplayMaze(maze)
