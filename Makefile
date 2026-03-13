@@ -10,7 +10,6 @@ install: .venv/uv.lock
 	@touch .venv/uv.lock
 
 run: install
-	rm -rf 
 	@echo "Running the maze generator..."
 	$(PYTHON) $(MAIN) $(CONFIG) 
 
